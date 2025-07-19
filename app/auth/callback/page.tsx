@@ -14,8 +14,8 @@ export default function AuthCallbackPage() {
         
         // Get userType from URL parameters
         const urlParams = new URLSearchParams(window.location.search)
-        const userType = urlParams.get('userType') || 'member'
-        console.log("🎯 User type from URL:", userType)
+        const urlUserType = urlParams.get('userType')
+        console.log("🎯 User type from URL:", urlUserType)
         
         // Handle the OAuth callback
         const { data, error } = await supabase.auth.getSession()
@@ -32,6 +32,10 @@ export default function AuthCallbackPage() {
           const user = data.session.user
           console.log("✅ User authenticated:", user.email)
           console.log("📧 Current user metadata:", user.user_metadata)
+          
+          // Determine userType - prioritize URL parameter, then metadata, then default to member
+          let userType = urlUserType || user.user_metadata?.userType || 'member'
+          console.log("🎯 Final userType determined:", userType)
           
           // Always update user metadata with userType to ensure it's set correctly
           console.log("🔄 Updating user metadata with userType:", userType)
@@ -86,7 +90,7 @@ export default function AuthCallbackPage() {
                 finalUserType = 'member'
                 console.log("🎯 User found in members table, setting finalUserType to member")
               } else {
-                console.log("🎯 User not found in database, using URL userType:", userType)
+                console.log("🎯 User not found in database, using determined userType:", userType)
               }
               
               // Update user metadata with the final userType if it changed
@@ -175,11 +179,15 @@ export default function AuthCallbackPage() {
               const user = sessionData.session.user
               console.log("✅ Session set successfully for user:", user.email)
               
-              // Update user metadata with userType if it's a new user
-              if (user && !user.user_metadata?.userType) {
-                console.log("🔄 Updating user metadata with userType:", userType)
+              // Determine userType for hash flow
+              let hashUserType = urlUserType || user.user_metadata?.userType || 'member'
+              console.log("🎯 UserType for hash flow:", hashUserType)
+              
+              // Update user metadata with userType if it's a new user or different
+              if (user && (!user.user_metadata?.userType || user.user_metadata?.userType !== hashUserType)) {
+                console.log("🔄 Updating user metadata with userType:", hashUserType)
                 const { error: updateError } = await supabase.auth.updateUser({
-                  data: { userType: userType }
+                  data: { userType: hashUserType }
                 })
                 
                 if (updateError) {
@@ -211,7 +219,7 @@ export default function AuthCallbackPage() {
                   console.log("📊 Trainer data (hash flow):", trainerData)
                   
                   // Determine user type - prioritize database over metadata
-                  let finalUserType = userType
+                  let finalUserType = hashUserType
                   
                   if (trainerData) {
                     // User exists in trainers table
@@ -222,11 +230,11 @@ export default function AuthCallbackPage() {
                     finalUserType = 'member'
                     console.log("🎯 User found in members table (hash flow), setting finalUserType to member")
                   } else {
-                    console.log("🎯 User not found in database (hash flow), using URL userType:", userType)
+                    console.log("🎯 User not found in database (hash flow), using hashUserType:", hashUserType)
                   }
                   
                   // Update user metadata with the final userType if it changed
-                  if (finalUserType !== userType) {
+                  if (finalUserType !== hashUserType) {
                     console.log("🔄 Updating user metadata with final userType (hash flow):", finalUserType)
                     const { error: finalUpdateError } = await supabase.auth.updateUser({
                       data: { userType: finalUserType }

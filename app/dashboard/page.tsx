@@ -11,85 +11,91 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const handleRedirect = async () => {
-      console.log("Dashboard page - User:", user)
-      console.log("Dashboard page - Loading:", loading)
+      console.log("🏠 Dashboard page - User:", user)
+      console.log("🏠 Dashboard page - Loading:", loading)
       
       if (!loading && !user) {
-        console.log("No user found, redirecting to signin")
+        console.log("❌ No user found, redirecting to signin")
         router.push("/signin")
         return
       }
 
       if (!loading && user) {
-        console.log("User found, checking user type")
+        console.log("✅ User found, checking user type")
         
         // Force refresh session to get latest metadata
         const { data: sessionData } = await supabase.auth.getSession()
         const currentUser = sessionData.session?.user || user
         
-        console.log("Current user metadata:", currentUser.user_metadata)
+        console.log("📧 Current user metadata:", currentUser.user_metadata)
         
         // Redirect based on user type
         const userType = currentUser.user_metadata?.userType || 'member'
         const userEmail = currentUser.email?.toLowerCase()
         
-        console.log("User type from metadata:", userType)
-        console.log("User email:", userEmail)
-        console.log("Full user metadata:", currentUser.user_metadata)
+        console.log("🎯 User type from metadata:", userType)
+        console.log("📧 User email:", userEmail)
+        console.log("📧 Full user metadata:", currentUser.user_metadata)
         
         // Check if user is admin (specific email)
         if (userEmail === 'gouravpanda2k04@gmail.com') {
-          console.log("User is admin, redirecting to admin dashboard")
+          console.log("👑 User is admin, redirecting to admin dashboard")
           router.push("/admin-dashboard")
           return
         }
         
         // Always check database first to determine user type
-        console.log("Checking database for user type...")
+        console.log("🔍 Checking database for user type...")
         try {
           // Check if user exists in trainers table
-          const { data: trainerData } = await supabaseService
+          const { data: trainerData, error: trainerError } = await supabaseService
             .from('trainers')
             .select('id')
             .eq('user_id', currentUser.id)
             .single()
           
+          console.log("📊 Trainer data from database:", trainerData)
+          console.log("❌ Trainer error from database:", trainerError)
+          
           if (trainerData) {
-            console.log("User found in trainers table, redirecting to trainer dashboard")
+            console.log("🏋️ User found in trainers table, redirecting to trainer dashboard")
             router.push("/trainer-dashboard")
             return
           }
           
           // Check if user exists in members table
-          const { data: memberData } = await supabaseService
+          const { data: memberData, error: memberError } = await supabaseService
             .from('members')
             .select('id')
             .eq('user_id', currentUser.id)
             .single()
           
+          console.log("📊 Member data from database:", memberData)
+          console.log("❌ Member error from database:", memberError)
+          
           if (memberData) {
-            console.log("User found in members table, redirecting to member dashboard")
+            console.log("👤 User found in members table, redirecting to member dashboard")
             router.push("/member-dashboard")
             return
           }
           
           // If user doesn't exist in either table, use metadata
-          console.log("User not found in database, using metadata userType:", userType)
+          console.log("⚠️ User not found in database, using metadata userType:", userType)
           if (userType === 'trainer') {
-            console.log("User is trainer, redirecting to trainer dashboard")
+            console.log("🏋️ User is trainer (metadata), redirecting to trainer dashboard")
             router.push("/trainer-dashboard")
           } else {
-            console.log("User is member, redirecting to member dashboard")
+            console.log("👤 User is member (metadata), redirecting to member dashboard")
             router.push("/member-dashboard")
           }
         } catch (error) {
-          console.log("Error checking database for user type:", error)
+          console.log("❌ Error checking database for user type:", error)
           // Fallback to metadata
           if (userType === 'trainer') {
-            console.log("Fallback: User is trainer, redirecting to trainer dashboard")
+            console.log("🏋️ Fallback: User is trainer, redirecting to trainer dashboard")
             router.push("/trainer-dashboard")
           } else {
-            console.log("Fallback: User is member, redirecting to member dashboard")
+            console.log("👤 Fallback: User is member, redirecting to member dashboard")
             router.push("/member-dashboard")
           }
         }

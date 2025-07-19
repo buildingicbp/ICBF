@@ -228,7 +228,10 @@ export function useAuth() {
   }) => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }))
     
-    console.log("SignUp called with userType:", userData?.userType)
+    console.log("📝 SignUp called with userType:", userData?.userType)
+    console.log("📝 Full userData:", userData)
+    
+    const userType = userData?.userType || 'member'
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -236,13 +239,14 @@ export function useAuth() {
       options: {
         data: {
           ...userData,
-          userType: userData?.userType || 'member' // Ensure userType is included
+          userType: userType, // Ensure userType is included in metadata
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?userType=${userData?.userType || 'member'}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?userType=${userType}`,
       },
     })
 
     if (error) {
+      console.error("❌ SignUp error:", error)
       setAuthState(prev => ({
         ...prev,
         loading: false,
@@ -251,11 +255,14 @@ export function useAuth() {
       return { error }
     }
 
+    console.log("✅ SignUp successful, user data:", data.user)
+    console.log("📧 User metadata after signup:", data.user?.user_metadata)
+
     // Create profile in appropriate table based on user type
     if (data.user && userData) {
       try {
-        console.log("Creating profile for user:", data.user.id)
-        console.log("UserType for profile creation:", userData.userType)
+        console.log("🆕 Creating profile for user:", data.user.id)
+        console.log("🎯 UserType for profile creation:", userType)
         
         const profileData = {
           user_id: data.user.id,
@@ -265,27 +272,27 @@ export function useAuth() {
           full_name: userData.full_name || userData.username || '',
         }
 
-        console.log("Profile data:", profileData)
+        console.log("📝 Profile data:", profileData)
 
-        if (userData.userType === 'trainer') {
-          console.log("Creating trainer profile...")
+        if (userType === 'trainer') {
+          console.log("🏋️ Creating trainer profile...")
           const result = await createTrainerProfile(profileData)
           if (result.error) {
-            console.error("Failed to create trainer profile:", result.error)
+            console.error("❌ Failed to create trainer profile:", result.error)
           } else {
-            console.log("Trainer profile created successfully:", result.data)
+            console.log("✅ Trainer profile created successfully:", result.data)
           }
         } else {
-          console.log("Creating member profile...")
+          console.log("👤 Creating member profile...")
           const result = await createMemberProfile(profileData)
           if (result.error) {
-            console.error("Failed to create member profile:", result.error)
+            console.error("❌ Failed to create member profile:", result.error)
           } else {
-            console.log("Member profile created successfully:", result.data)
+            console.log("✅ Member profile created successfully:", result.data)
           }
         }
       } catch (profileError) {
-        console.error('Error creating profile:', profileError)
+        console.error('❌ Error creating profile:', profileError)
         // Don't fail the signup if profile creation fails
       }
     }
