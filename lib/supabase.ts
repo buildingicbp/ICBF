@@ -297,8 +297,46 @@ export const debugDatabase = () => {
   })
 }
 
+// Test RLS policies
+export const testRLSPolicies = async () => {
+  console.log("🧪 Testing RLS Policies...")
+  
+  try {
+    // Test if we can insert a member
+    const testMemberData = {
+      user_id: 'test-rls-' + Date.now(),
+      username: 'test_rls_user',
+      email: 'test.rls@example.com',
+      contact: '+1234567890',
+      full_name: 'Test RLS User'
+    }
+    
+    const { data, error } = await supabase
+      .from('members')
+      .insert(testMemberData)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error("❌ RLS policy test failed:", error)
+      return false
+    } else {
+      console.log("✅ RLS policy test passed:", data)
+      
+      // Clean up test data
+      await supabase.from('members').delete().eq('user_id', testMemberData.user_id)
+      console.log("🧹 Test data cleaned up")
+      return true
+    }
+  } catch (err) {
+    console.error("❌ RLS policy test error:", err)
+    return false
+  }
+}
+
 // Make debug function available globally
 if (typeof window !== 'undefined') {
   (window as any).debugDatabase = debugDatabase
   ;(window as any).testDatabaseInsertion = testDatabaseInsertion
+  ;(window as any).testRLSPolicies = testRLSPolicies
 } 

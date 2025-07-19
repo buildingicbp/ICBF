@@ -228,6 +228,8 @@ export function useAuth() {
   }) => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }))
     
+    console.log("SignUp called with userType:", userData?.userType)
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -236,7 +238,7 @@ export function useAuth() {
           ...userData,
           userType: userData?.userType || 'member' // Ensure userType is included
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?userType=${userData?.userType || 'member'}`,
       },
     })
 
@@ -252,6 +254,9 @@ export function useAuth() {
     // Create profile in appropriate table based on user type
     if (data.user && userData) {
       try {
+        console.log("Creating profile for user:", data.user.id)
+        console.log("UserType for profile creation:", userData.userType)
+        
         const profileData = {
           user_id: data.user.id,
           username: userData.username || '',
@@ -260,10 +265,24 @@ export function useAuth() {
           full_name: userData.full_name || userData.username || '',
         }
 
+        console.log("Profile data:", profileData)
+
         if (userData.userType === 'trainer') {
-          await createTrainerProfile(profileData)
+          console.log("Creating trainer profile...")
+          const result = await createTrainerProfile(profileData)
+          if (result.error) {
+            console.error("Failed to create trainer profile:", result.error)
+          } else {
+            console.log("Trainer profile created successfully:", result.data)
+          }
         } else {
-          await createMemberProfile(profileData)
+          console.log("Creating member profile...")
+          const result = await createMemberProfile(profileData)
+          if (result.error) {
+            console.error("Failed to create member profile:", result.error)
+          } else {
+            console.log("Member profile created successfully:", result.data)
+          }
         }
       } catch (profileError) {
         console.error('Error creating profile:', profileError)

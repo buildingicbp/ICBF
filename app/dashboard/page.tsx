@@ -44,47 +44,54 @@ export default function DashboardPage() {
           return
         }
         
-        // Try to determine user type from database if metadata is not set
-        if (!currentUser.user_metadata?.userType) {
-          console.log("No userType in metadata, checking database...")
-          try {
-            // Check if user exists in trainers table
-            const { data: trainerData } = await supabaseService
-              .from('trainers')
-              .select('id')
-              .eq('user_id', currentUser.id)
-              .single()
-            
-            if (trainerData) {
-              console.log("User found in trainers table, redirecting to trainer dashboard")
-              router.push("/trainer-dashboard")
-              return
-            }
-            
-            // Check if user exists in members table
-            const { data: memberData } = await supabaseService
-              .from('members')
-              .select('id')
-              .eq('user_id', currentUser.id)
-              .single()
-            
-            if (memberData) {
-              console.log("User found in members table, redirecting to member dashboard")
-              router.push("/member-dashboard")
-              return
-            }
-          } catch (error) {
-            console.log("Error checking database for user type:", error)
+        // Always check database first to determine user type
+        console.log("Checking database for user type...")
+        try {
+          // Check if user exists in trainers table
+          const { data: trainerData } = await supabaseService
+            .from('trainers')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .single()
+          
+          if (trainerData) {
+            console.log("User found in trainers table, redirecting to trainer dashboard")
+            router.push("/trainer-dashboard")
+            return
           }
-        }
-        
-        // Redirect to role-specific dashboard based on metadata
-        if (userType === 'trainer') {
-          console.log("User is trainer, redirecting to trainer dashboard")
-          router.push("/trainer-dashboard")
-        } else {
-          console.log("User is member, redirecting to member dashboard")
-          router.push("/member-dashboard")
+          
+          // Check if user exists in members table
+          const { data: memberData } = await supabaseService
+            .from('members')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .single()
+          
+          if (memberData) {
+            console.log("User found in members table, redirecting to member dashboard")
+            router.push("/member-dashboard")
+            return
+          }
+          
+          // If user doesn't exist in either table, use metadata
+          console.log("User not found in database, using metadata userType:", userType)
+          if (userType === 'trainer') {
+            console.log("User is trainer, redirecting to trainer dashboard")
+            router.push("/trainer-dashboard")
+          } else {
+            console.log("User is member, redirecting to member dashboard")
+            router.push("/member-dashboard")
+          }
+        } catch (error) {
+          console.log("Error checking database for user type:", error)
+          // Fallback to metadata
+          if (userType === 'trainer') {
+            console.log("Fallback: User is trainer, redirecting to trainer dashboard")
+            router.push("/trainer-dashboard")
+          } else {
+            console.log("Fallback: User is member, redirecting to member dashboard")
+            router.push("/member-dashboard")
+          }
         }
       }
     }
