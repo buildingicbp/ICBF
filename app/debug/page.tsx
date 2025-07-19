@@ -49,8 +49,10 @@ export default function DebugPage() {
     // Test 3: RLS Policy Test
     addLog("3. Testing RLS policies...")
     try {
+      // Generate a proper UUID
+      const testUserId = crypto.randomUUID()
       const testData = {
-        user_id: 'test-' + Date.now(),
+        user_id: testUserId,
         username: 'testuser',
         email: 'test@example.com',
         contact: '+1234567890',
@@ -67,7 +69,7 @@ export default function DebugPage() {
         addLog(`Inserted data: ${JSON.stringify(insertData)}`)
         
         // Clean up
-        await supabase.from('members').delete().eq('user_id', testData.user_id)
+        await supabase.from('members').delete().eq('user_id', testUserId)
         addLog("🧹 Test data cleaned up")
       }
     } catch (err) {
@@ -77,8 +79,10 @@ export default function DebugPage() {
     // Test 4: Profile creation functions
     addLog("4. Testing profile creation functions...")
     try {
+      // Generate a proper UUID
+      const testMemberUserId = crypto.randomUUID()
       const testMemberData = {
-        user_id: 'test-member-' + Date.now(),
+        user_id: testMemberUserId,
         username: 'testmember',
         email: 'testmember@example.com',
         contact: '+1234567890',
@@ -93,7 +97,7 @@ export default function DebugPage() {
         addLog(`Member data: ${JSON.stringify(memberResult.data)}`)
         
         // Clean up
-        await supabase.from('members').delete().eq('user_id', testMemberData.user_id)
+        await supabase.from('members').delete().eq('user_id', testMemberUserId)
         addLog("🧹 Member test data cleaned up")
       }
     } catch (err) {
