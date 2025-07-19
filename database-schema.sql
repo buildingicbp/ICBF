@@ -117,6 +117,10 @@ CREATE POLICY "Members can update own profile" ON members
 CREATE POLICY "Members can insert own profile" ON members
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- Allow authenticated users to create profiles (for new signups)
+CREATE POLICY "Authenticated users can create profiles" ON members
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
 -- Allow service role to manage all member profiles (for profile creation)
 CREATE POLICY "Service role can manage all member profiles" ON members
   FOR ALL USING (auth.role() = 'service_role');
@@ -130,6 +134,10 @@ CREATE POLICY "Trainers can update own profile" ON trainers
 
 CREATE POLICY "Trainers can insert own profile" ON trainers
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Allow authenticated users to create profiles (for new signups)
+CREATE POLICY "Authenticated users can create trainer profiles" ON trainers
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 -- Allow service role to manage all trainer profiles (for profile creation)
 CREATE POLICY "Service role can manage all trainer profiles" ON trainers

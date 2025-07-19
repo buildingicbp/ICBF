@@ -78,7 +78,8 @@ export const createMemberProfile = async (userData: {
   console.log("Creating member profile with data:", userData)
   
   try {
-    const { data, error } = await supabaseService
+    // Use regular client directly - this should work with proper RLS policies
+    const { data, error } = await supabase
       .from('members')
       .insert({
         user_id: userData.user_id,
@@ -120,7 +121,8 @@ export const createTrainerProfile = async (userData: {
   console.log("Creating trainer profile with data:", userData)
   
   try {
-    const { data, error } = await supabaseService
+    // Use regular client directly - this should work with proper RLS policies
+    const { data, error } = await supabase
       .from('trainers')
       .insert({
         user_id: userData.user_id,
