@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,7 @@ import Link from "next/link"
 import { useAuth } from "@/hooks/use-auth"
 import { toast } from "sonner"
 
-export default function OTPVerificationPage() {
+function OTPVerificationContent() {
   const [otp, setOtp] = useState("")
   const [isResending, setIsResending] = useState(false)
   const [countdown, setCountdown] = useState(0)
@@ -191,5 +191,20 @@ export default function OTPVerificationPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OTPVerificationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OTPVerificationContent />
+    </Suspense>
   )
 } 
