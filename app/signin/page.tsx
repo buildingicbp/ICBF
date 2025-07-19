@@ -57,6 +57,7 @@ export default function SignUpPage() {
           }
         } else {
           // Password Sign In
+          console.log("🔐 Signing in with userType:", userType)
           const { error } = await signIn(formData.email, formData.password, userType as 'member' | 'trainer')
           if (error) {
             // Provide better error messages for common scenarios
@@ -78,12 +79,20 @@ export default function SignUpPage() {
           }
         }
       } else {
-        const { error } = await signUp(formData.email, formData.password, {
+        console.log("📝 Starting sign-up process...")
+        console.log("📝 UserType selected:", userType)
+        console.log("📝 Form data:", formData)
+        
+        const signUpData = {
           username: formData.username,
           contact: formData.contact,
           userType: userType as 'member' | 'trainer',
           full_name: formData.username, // Use username as full name initially
-        })
+        }
+        
+        console.log("📝 Sign-up data being passed:", signUpData)
+        
+        const { error } = await signUp(formData.email, formData.password, signUpData)
         if (error) {
           let errorMessage = error.message
           
@@ -91,30 +100,33 @@ export default function SignUpPage() {
             errorMessage = 'An account with this email already exists. Please sign in instead, or use "Continue with Google Account" if you signed up with Google.'
           }
           
+          console.error("❌ Sign-up error:", error)
           toast.error(errorMessage)
         } else {
+          console.log("✅ Sign-up successful!")
           toast.success("Account created successfully! Please check your email to verify your account.")
           // Redirect to a verification page or show verification instructions
           router.push(`/verification?email=${encodeURIComponent(formData.email)}`)
         }
       }
     } catch (err) {
+      console.error("💥 Unexpected error in handleSubmit:", err)
       toast.error("An unexpected error occurred")
     }
   }
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log("Starting Google sign-in with userType:", userType)
+      console.log("🔐 Starting Google sign-in with userType:", userType)
       const { error } = await signInWithGoogle(userType as 'member' | 'trainer')
       if (error) {
-        console.error("Google sign-in error:", error)
+        console.error("❌ Google sign-in error:", error)
         toast.error(error.message)
       } else {
-        console.log("Google sign-in initiated successfully")
+        console.log("✅ Google sign-in initiated successfully")
       }
     } catch (err) {
-      console.error("Unexpected error in Google sign-in:", err)
+      console.error("💥 Unexpected error in Google sign-in:", err)
       toast.error("An unexpected error occurred")
     }
   }

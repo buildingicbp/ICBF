@@ -152,24 +152,138 @@ export default function DebugPage() {
     setLoading(false)
   }
 
+  // Add new function to test sign-up flow simulation
+  const testSignUpFlow = async () => {
+    setLoading(true)
+    setDebugResults([])
+    
+    try {
+      addLog("🚀 Testing sign-up flow simulation...")
+      
+      // Get current user
+      const { data: sessionData } = await supabase.auth.getSession()
+      const user = sessionData.session?.user
+      
+      if (!user) {
+        addLog("❌ No user logged in for testing")
+        return
+      }
+      
+      addLog(`👤 Testing with user: ${user.email}`)
+      addLog(`📧 User metadata: ${JSON.stringify(user.user_metadata)}`)
+      
+      // Simulate the sign-up flow logic
+      addLog("1. Checking existing profiles...")
+      const { data: memberData } = await supabase.from('members').select('id').eq('user_id', user.id).single()
+      
+      const { data: trainerData } = await supabase.from('trainers').select('id').eq('user_id', user.id).single()
+      
+      addLog(`📊 Member profile exists: ${!!memberData}`)
+      addLog(`📊 Trainer profile exists: ${!!trainerData}`)
+      
+      // Determine user type
+      let userType = 'member'
+      if (trainerData) {
+        userType = 'trainer'
+      } else if (memberData) {
+        userType = 'member'
+      } else {
+        userType = user.user_metadata?.userType || 'member'
+      }
+      
+      addLog(`🎯 Determined user type: ${userType}`)
+      
+      // Create profile if needed
+      if (!memberData && !trainerData) {
+        addLog("🆕 Creating new profile...")
+        
+        const profileData = {
+          user_id: user.id,
+          username: user.user_metadata?.full_name || user.email?.split('@')[0] || 'user',
+          email: user.email || '',
+          contact: user.user_metadata?.phone || '',
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+        }
+        
+        addLog(`📝 Profile data: ${JSON.stringify(profileData)}`)
+        
+        if (userType === 'trainer') {
+          addLog("🏋️ Creating trainer profile...")
+          const result = await createTrainerProfile(profileData)
+          if (result.error) {
+            addLog(`❌ Trainer profile creation failed: ${result.error.message}`)
+          } else {
+            addLog(`✅ Trainer profile created: ${JSON.stringify(result.data)}`)
+          }
+        } else {
+          addLog("👤 Creating member profile...")
+          const result = await createMemberProfile(profileData)
+          if (result.error) {
+            addLog(`❌ Member profile creation failed: ${result.error.message}`)
+          } else {
+            addLog(`✅ Member profile created: ${JSON.stringify(result.data)}`)
+          }
+        }
+      } else {
+        addLog("✅ Profile already exists")
+      }
+      
+      // Test dashboard routing logic
+      addLog("2. Testing dashboard routing logic...")
+      
+      // Check database again after potential creation
+      const { data: finalMemberData } = await supabase.from('members').select('id').eq('user_id', user.id).single()
+      
+      const { data: finalTrainerData } = await supabase.from('trainers').select('id').eq('user_id', user.id).single()
+      
+      addLog(`📊 Final member profile: ${!!finalMemberData}`)
+      addLog(`📊 Final trainer profile: ${!!finalTrainerData}`)
+      
+      if (finalTrainerData) {
+        addLog("🎯 Should redirect to: /trainer-dashboard")
+      } else if (finalMemberData) {
+        addLog("🎯 Should redirect to: /member-dashboard")
+      } else {
+        addLog("🎯 Should redirect to: /member-dashboard (fallback)")
+      }
+      
+      addLog("✅ Sign-up flow test completed")
+      
+    } catch (error) {
+      addLog(`❌ Sign-up flow test error: ${error}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">🔍 Deployment Debug</h1>
         
-        <button
-          onClick={runDebugTests}
-          disabled={loading}
-          className="mb-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Running Tests..." : "Run Debug Tests"}
-        </button>
+        <div className="space-y-4">
+          <button
+            onClick={runDebugTests}
+            disabled={loading}
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Running Tests..." : "Run Debug Tests"}
+          </button>
+          
+          <button
+            onClick={testSignUpFlow}
+            disabled={loading}
+            className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+          >
+            {loading ? "Testing..." : "Test Sign-Up Flow"}
+          </button>
+        </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4">Debug Results:</h2>
           <div className="bg-gray-100 rounded p-4 h-96 overflow-y-auto font-mono text-sm">
             {debugResults.length === 0 ? (
-              <p className="text-gray-500">Click "Run Debug Tests" to start debugging...</p>
+              <p className="text-gray-500">Click "Run Debug Tests" or "Test Sign-Up Flow" to start debugging...</p>
             ) : (
               debugResults.map((log, index) => (
                 <div key={index} className="mb-1">

@@ -10,39 +10,39 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        console.log("Auth callback started")
+        console.log("🔄 Auth callback started")
         
         // Get userType from URL parameters
         const urlParams = new URLSearchParams(window.location.search)
         const userType = urlParams.get('userType') || 'member'
-        console.log("User type from URL:", userType)
+        console.log("🎯 User type from URL:", userType)
         
         // Handle the OAuth callback
         const { data, error } = await supabase.auth.getSession()
-        console.log("Session data:", data)
-        console.log("Session error:", error)
+        console.log("📊 Session data:", data)
+        console.log("❌ Session error:", error)
         
         if (error) {
-          console.error("Auth callback error:", error)
+          console.error("❌ Auth callback error:", error)
           router.push("/signin?error=auth_callback_failed")
           return
         }
 
         if (data.session) {
           const user = data.session.user
-          console.log("User authenticated:", user.email)
-          console.log("Current user metadata:", user.user_metadata)
+          console.log("✅ User authenticated:", user.email)
+          console.log("📧 Current user metadata:", user.user_metadata)
           
           // Always update user metadata with userType to ensure it's set correctly
-          console.log("Updating user metadata with userType:", userType)
+          console.log("🔄 Updating user metadata with userType:", userType)
           const { error: updateError } = await supabase.auth.updateUser({
             data: { userType: userType }
           })
           
           if (updateError) {
-            console.error("Error updating user metadata:", updateError)
+            console.error("❌ Error updating user metadata:", updateError)
           } else {
-            console.log("User metadata updated successfully")
+            console.log("✅ User metadata updated successfully")
           }
           
           // Wait a moment for the metadata to be updated, then get the fresh session
@@ -51,12 +51,12 @@ export default function AuthCallbackPage() {
           // Get the updated session to ensure we have the latest metadata
           const { data: updatedSessionData } = await supabase.auth.getSession()
           const updatedUser = updatedSessionData.session?.user
-          console.log("Updated user metadata:", updatedUser?.user_metadata)
+          console.log("📧 Updated user metadata:", updatedUser?.user_metadata)
           
           // Check if user has a profile in the database, create if not
           if (updatedUser) {
             try {
-              console.log("Checking for existing profile...")
+              console.log("🔍 Checking for existing profile...")
               // Check if user exists in members table
               const { data: memberData } = await supabaseService
                 .from('members')
@@ -71,8 +71,8 @@ export default function AuthCallbackPage() {
                 .eq('user_id', updatedUser.id)
                 .single()
               
-              console.log("Member data:", memberData)
-              console.log("Trainer data:", trainerData)
+              console.log("📊 Member data:", memberData)
+              console.log("📊 Trainer data:", trainerData)
               
               // Determine user type - prioritize database over metadata
               let finalUserType = userType
@@ -80,29 +80,33 @@ export default function AuthCallbackPage() {
               if (trainerData) {
                 // User exists in trainers table
                 finalUserType = 'trainer'
+                console.log("🎯 User found in trainers table, setting finalUserType to trainer")
               } else if (memberData) {
                 // User exists in members table
                 finalUserType = 'member'
+                console.log("🎯 User found in members table, setting finalUserType to member")
+              } else {
+                console.log("🎯 User not found in database, using URL userType:", userType)
               }
               
               // Update user metadata with the final userType if it changed
               if (finalUserType !== userType) {
-                console.log("Updating user metadata with final userType:", finalUserType)
+                console.log("🔄 Updating user metadata with final userType:", finalUserType)
                 const { error: finalUpdateError } = await supabase.auth.updateUser({
                   data: { userType: finalUserType }
                 })
                 
                 if (finalUpdateError) {
-                  console.error("Error updating user metadata with final userType:", finalUpdateError)
+                  console.error("❌ Error updating user metadata with final userType:", finalUpdateError)
                 } else {
-                  console.log("User metadata updated with final userType successfully")
+                  console.log("✅ User metadata updated with final userType successfully")
                 }
               }
               
               // If user doesn't exist in either table, create profile
               if (!memberData && !trainerData) {
-                console.log("Creating new profile for user")
-                console.log("Creating profile for userType:", finalUserType)
+                console.log("🆕 Creating new profile for user")
+                console.log("🎯 Creating profile for userType:", finalUserType)
                 
                 const profileData = {
                   user_id: updatedUser.id,
@@ -112,49 +116,49 @@ export default function AuthCallbackPage() {
                   full_name: updatedUser.user_metadata?.full_name || updatedUser.user_metadata?.name || updatedUser.email?.split('@')[0] || 'User',
                 }
                 
-                console.log("Profile data to create:", profileData)
+                console.log("📝 Profile data to create:", profileData)
                 
                 if (finalUserType === 'trainer') {
-                  console.log("Creating trainer profile...")
+                  console.log("🏋️ Creating trainer profile...")
                   const result = await createTrainerProfile(profileData)
                   if (result.error) {
-                    console.error("Failed to create trainer profile:", result.error)
+                    console.error("❌ Failed to create trainer profile:", result.error)
                   } else {
-                    console.log('Created trainer profile for OAuth user:', result.data)
+                    console.log('✅ Created trainer profile for OAuth user:', result.data)
                   }
                 } else {
-                  console.log("Creating member profile...")
+                  console.log("👤 Creating member profile...")
                   const result = await createMemberProfile(profileData)
                   if (result.error) {
-                    console.error("Failed to create member profile:", result.error)
+                    console.error("❌ Failed to create member profile:", result.error)
                   } else {
-                    console.log('Created member profile for OAuth user:', result.data)
+                    console.log('✅ Created member profile for OAuth user:', result.data)
                   }
                 }
               } else {
-                console.log("User profile already exists")
+                console.log("✅ User profile already exists")
               }
             } catch (profileError) {
-              console.error('Error checking/creating profile:', profileError)
+              console.error('❌ Error checking/creating profile:', profileError)
               // Don't fail the auth if profile creation fails
             }
           }
           
           // Successfully authenticated, redirect to dashboard
-          console.log("Auth successful, redirecting to dashboard")
+          console.log("✅ Auth successful, redirecting to dashboard")
           
           // Add a small delay to ensure everything is processed
           setTimeout(() => {
             router.push("/dashboard")
           }, 1000)
         } else {
-          console.log("No session found, checking URL hash...")
+          console.log("❌ No session found, checking URL hash...")
           // Try to get the session from the URL hash
           const hashParams = new URLSearchParams(window.location.hash.substring(1))
           const accessToken = hashParams.get('access_token')
           
           if (accessToken) {
-            console.log("Found access token in URL hash")
+            console.log("🔑 Found access token in URL hash")
             // Set the session manually if we have an access token
             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
               access_token: accessToken,
@@ -162,29 +166,33 @@ export default function AuthCallbackPage() {
             })
             
             if (sessionError) {
-              console.error("Session error:", sessionError)
+              console.error("❌ Session error:", sessionError)
               router.push("/signin?error=auth_callback_failed")
               return
             }
             
             if (sessionData.session) {
               const user = sessionData.session.user
-              console.log("Session set successfully for user:", user.email)
+              console.log("✅ Session set successfully for user:", user.email)
               
               // Update user metadata with userType if it's a new user
               if (user && !user.user_metadata?.userType) {
+                console.log("🔄 Updating user metadata with userType:", userType)
                 const { error: updateError } = await supabase.auth.updateUser({
                   data: { userType: userType }
                 })
                 
                 if (updateError) {
-                  console.error("Error updating user metadata:", updateError)
+                  console.error("❌ Error updating user metadata:", updateError)
+                } else {
+                  console.log("✅ User metadata updated successfully")
                 }
               }
               
               // Check if user has a profile in the database, create if not
               if (user) {
                 try {
+                  console.log("🔍 Checking for existing profile in hash flow...")
                   // Check if user exists in members table
                   const { data: memberData } = await supabaseService
                     .from('members')
@@ -199,33 +207,41 @@ export default function AuthCallbackPage() {
                     .eq('user_id', user.id)
                     .single()
                   
+                  console.log("📊 Member data (hash flow):", memberData)
+                  console.log("📊 Trainer data (hash flow):", trainerData)
+                  
                   // Determine user type - prioritize database over metadata
                   let finalUserType = userType
                   
                   if (trainerData) {
                     // User exists in trainers table
                     finalUserType = 'trainer'
+                    console.log("🎯 User found in trainers table (hash flow), setting finalUserType to trainer")
                   } else if (memberData) {
                     // User exists in members table
                     finalUserType = 'member'
+                    console.log("🎯 User found in members table (hash flow), setting finalUserType to member")
+                  } else {
+                    console.log("🎯 User not found in database (hash flow), using URL userType:", userType)
                   }
                   
                   // Update user metadata with the final userType if it changed
                   if (finalUserType !== userType) {
-                    console.log("Updating user metadata with final userType:", finalUserType)
+                    console.log("🔄 Updating user metadata with final userType (hash flow):", finalUserType)
                     const { error: finalUpdateError } = await supabase.auth.updateUser({
                       data: { userType: finalUserType }
                     })
                     
                     if (finalUpdateError) {
-                      console.error("Error updating user metadata with final userType:", finalUpdateError)
+                      console.error("❌ Error updating user metadata with final userType (hash flow):", finalUpdateError)
                     } else {
-                      console.log("User metadata updated with final userType successfully")
+                      console.log("✅ User metadata updated with final userType successfully (hash flow)")
                     }
                   }
                   
                   // If user doesn't exist in either table, create profile
                   if (!memberData && !trainerData) {
+                    console.log("🆕 Creating new profile for user (hash flow)")
                     const profileData = {
                       user_id: user.id,
                       username: user.user_metadata?.full_name || user.email?.split('@')[0] || 'user',
@@ -234,21 +250,35 @@ export default function AuthCallbackPage() {
                       full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
                     }
                     
+                    console.log("📝 Profile data to create (hash flow):", profileData)
+                    
                     if (finalUserType === 'trainer') {
-                      await createTrainerProfile(profileData)
-                      console.log('Created trainer profile for OAuth user')
+                      console.log("🏋️ Creating trainer profile (hash flow)...")
+                      const result = await createTrainerProfile(profileData)
+                      if (result.error) {
+                        console.error("❌ Failed to create trainer profile (hash flow):", result.error)
+                      } else {
+                        console.log('✅ Created trainer profile for OAuth user (hash flow):', result.data)
+                      }
                     } else {
-                      await createMemberProfile(profileData)
-                      console.log('Created member profile for OAuth user')
+                      console.log("👤 Creating member profile (hash flow)...")
+                      const result = await createMemberProfile(profileData)
+                      if (result.error) {
+                        console.error("❌ Failed to create member profile (hash flow):", result.error)
+                      } else {
+                        console.log('✅ Created member profile for OAuth user (hash flow):', result.data)
+                      }
                     }
+                  } else {
+                    console.log("✅ User profile already exists (hash flow)")
                   }
                 } catch (profileError) {
-                  console.error('Error checking/creating profile:', profileError)
+                  console.error('❌ Error checking/creating profile (hash flow):', profileError)
                   // Don't fail the auth if profile creation fails
                 }
               }
               
-              console.log("Session set successfully, redirecting to dashboard")
+              console.log("✅ Session set successfully, redirecting to dashboard")
               setTimeout(() => {
                 router.push("/dashboard")
               }, 1000)
@@ -257,11 +287,11 @@ export default function AuthCallbackPage() {
           }
           
           // No session found, redirect to signin
-          console.log("No session found, redirecting to signin")
+          console.log("❌ No session found, redirecting to signin")
           router.push("/signin")
         }
       } catch (error) {
-        console.error("Unexpected error in auth callback:", error)
+        console.error("💥 Unexpected error in auth callback:", error)
         router.push("/signin?error=unexpected_error")
       }
     }
