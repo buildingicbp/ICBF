@@ -83,9 +83,30 @@ export function useAuth() {
           .eq('user_id', data.user.id)
           .single()
         
+        // Determine user type based on which table they exist in
+        let userType = 'member'
+        if (trainerData) {
+          userType = 'trainer'
+        } else if (memberData) {
+          userType = 'member'
+        }
+        
+        // Update user metadata with the correct userType
+        if (data.user.user_metadata?.userType !== userType) {
+          console.log("Updating user metadata with userType:", userType)
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: { userType: userType }
+          })
+          
+          if (updateError) {
+            console.error("Error updating user metadata:", updateError)
+          } else {
+            console.log("User metadata updated successfully")
+          }
+        }
+        
         // If user doesn't exist in either table, create profile based on userType
         if (!memberData && !trainerData) {
-          const userType = data.user.user_metadata?.userType || 'member'
           const profileData = {
             user_id: data.user.id,
             username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'user',
@@ -129,7 +150,10 @@ export function useAuth() {
       email,
       password,
       options: {
-        data: userData,
+        data: {
+          ...userData,
+          userType: userData?.userType || 'member' // Ensure userType is included
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
@@ -237,9 +261,30 @@ export function useAuth() {
           .eq('user_id', data.user.id)
           .single()
         
+        // Determine user type based on which table they exist in
+        let userType = 'member'
+        if (trainerData) {
+          userType = 'trainer'
+        } else if (memberData) {
+          userType = 'member'
+        }
+        
+        // Update user metadata with the correct userType
+        if (data.user.user_metadata?.userType !== userType) {
+          console.log("Updating user metadata with userType:", userType)
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: { userType: userType }
+          })
+          
+          if (updateError) {
+            console.error("Error updating user metadata:", updateError)
+          } else {
+            console.log("User metadata updated successfully")
+          }
+        }
+        
         // If user doesn't exist in either table, create profile based on userType
         if (!memberData && !trainerData) {
-          const userType = data.user.user_metadata?.userType || 'member'
           const profileData = {
             user_id: data.user.id,
             username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'user',
