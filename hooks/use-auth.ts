@@ -232,6 +232,7 @@ export function useAuth() {
     console.log("📝 Full userData:", userData)
     
     const userType = userData?.userType || 'member'
+    console.log("🎯 Final userType for signup:", userType)
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -279,6 +280,36 @@ export function useAuth() {
           const result = await createTrainerProfile(profileData)
           if (result.error) {
             console.error("❌ Failed to create trainer profile:", result.error)
+            // Try direct insertion as fallback
+            console.log("🔄 Trying direct trainer insertion...")
+            const { data: directData, error: directError } = await supabaseService
+              .from('trainers')
+              .insert({
+                user_id: profileData.user_id,
+                username: profileData.username,
+                email: profileData.email,
+                contact: profileData.contact,
+                full_name: profileData.full_name,
+                join_date: new Date().toISOString(),
+                specialization: [],
+                hourly_rate: 50,
+                experience_years: 0,
+                rating: 0,
+                total_reviews: 0,
+                total_clients: 0,
+                active_clients: 0,
+                total_sessions: 0,
+                is_verified: false,
+                is_available: true,
+              })
+              .select()
+              .single()
+            
+            if (directError) {
+              console.error("❌ Direct trainer insertion also failed:", directError)
+            } else {
+              console.log("✅ Direct trainer insertion succeeded:", directData)
+            }
           } else {
             console.log("✅ Trainer profile created successfully:", result.data)
           }
@@ -287,6 +318,30 @@ export function useAuth() {
           const result = await createMemberProfile(profileData)
           if (result.error) {
             console.error("❌ Failed to create member profile:", result.error)
+            // Try direct insertion as fallback
+            console.log("🔄 Trying direct member insertion...")
+            const { data: directData, error: directError } = await supabaseService
+              .from('members')
+              .insert({
+                user_id: profileData.user_id,
+                username: profileData.username,
+                email: profileData.email,
+                contact: profileData.contact,
+                full_name: profileData.full_name,
+                join_date: new Date().toISOString(),
+                total_workouts: 0,
+                current_streak: 0,
+                longest_streak: 0,
+                total_calories_burned: 0,
+              })
+              .select()
+              .single()
+            
+            if (directError) {
+              console.error("❌ Direct member insertion also failed:", directError)
+            } else {
+              console.log("✅ Direct member insertion succeeded:", directData)
+            }
           } else {
             console.log("✅ Member profile created successfully:", result.data)
           }
