@@ -1,12 +1,23 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { User, Zap, Star, MessageCircle } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { User, Zap, Star, MessageCircle, Utensils, Dumbbell, Moon, Calendar, Lock, Sparkles, ArrowRight } from "lucide-react"
+import DietPlanModal from "@/components/diet-plan-modal"
+import { useScrollModal } from "@/hooks/use-scroll-modal"
+import DietPlanPopupModal from "@/components/diet-plan-popup-modal"
+import { useDietPlanPopup } from "@/hooks/use-diet-plan-popup"
 
 
 export default function LandingPage() {
+  const { showModal, closeModal } = useScrollModal()
+  const { showPopup, closePopup } = useDietPlanPopup()
+
   return (
-    <div className="bg-white" style={{ transform: 'scale(0.9)', transformOrigin: 'top center' }}>
+    <div className="bg-white" style={{ transform: 'scale(0.9)', transformOrigin: 'top center', margin: '0', padding: '0', minHeight: '100vh' }}>
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm">
         {/* Logo Container */}
@@ -33,17 +44,24 @@ export default function LandingPage() {
           </a>
         </nav>
 
-        {/* Login Button Container */}
-        <div className="flex items-center pr-32">
+        {/* Action Buttons Container */}
+        <div className="flex items-center gap-4 pr-32">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
+            <MessageCircle className="w-4 h-4" />
+            Book a Free Consultation
+          </Button>
           <Link href="/signin">
-            <Button className="bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-6 py-2 rounded-full">Login</Button>
+            <Button variant="outline" className="border-gray-300 text-[#1F509A] hover:bg-gray-50 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
+              Login As
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </Link>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-20">
-        <div className="grid lg:grid-cols-2 gap-4 items-center">
+      <main className="max-w-7xl mx-auto px-4 py-20">
+        <div className="grid lg:grid-cols-2 gap-20 items-center">
           {/* Left Content */}
           <div className="space-y-8">
             <div className="space-y-6">
@@ -99,7 +117,7 @@ export default function LandingPage() {
           </div>
 
           {/* Right Image */}
-          <div className="flex justify-center lg:justify-end">
+          <div className="flex justify-center lg:justify-start">
             <div className="relative">
               <Image
                 src="/transformation.png"
@@ -112,6 +130,92 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
+
+      {/* Fitness Section */}
+      <section className="py-12 mb-20">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">Why I Can Be Fitter</h1>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid lg:grid-cols-3 gap-16">
+            {/* Left Card - Balanced Meals */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden lg:col-span-2">
+              <CardContent className="p-10">
+                <div className="flex items-start gap-12">
+                  <div className="flex-1">
+                    <div className="inline-flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+                      <Zap className="w-4 h-4 mr-2" />
+                      Get Yourself A Healthier Diet
+                    </div>
+
+                    <h2 className="text-3xl font-bold mb-4">
+                      <span className="text-gray-900">Fit your body with </span>
+                      <span className="text-blue-600">balanced meals</span>
+                    </h2>
+
+                    <p className="text-gray-600 mb-8 leading-relaxed text-lg">
+                      We go beyond fitness by empowering you with insights and guidance to boost your blood cell
+                      production, enhance circulation and improve heart health.
+                    </p>
+
+                    <div className="flex gap-4">
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl">
+                        <Utensils className="w-4 h-4 mr-2" />
+                        Dieting
+                      </Button>
+                      <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-xl bg-transparent">
+                        <Dumbbell className="w-4 h-4 mr-2" />
+                        Workout
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="w-80 h-80 relative">
+                      <Image
+                        src="/Food.png"
+                        alt="Healthy bowl with colorful vegetables and protein"
+                        fill
+                        className="object-cover rounded-2xl"
+                      />
+                      
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Right Card - AI Chat Interface */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
+              <CardContent className="p-0 relative">
+                <div className="text-center">
+                  <div className="relative w-full h-64">
+                    <Image
+                      src="/AI.png"
+                      alt="AI-powered fitness assistant"
+                      fill
+                      className="object-cover rounded-t-3xl"
+                    />
+                  </div>
+
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">
+                      Get Yourself A Personalized Diet Plan with Our ICBF AI
+                    </h3>
+
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl">
+                      Try For Free →
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
 
       {/* Meet the Minds Behind the Mission Section */}
       <section className="container mx-auto px-6 py-16">
@@ -173,71 +277,95 @@ export default function LandingPage() {
           </div>
 
           {/* Testimonials Grid */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                id: 1,
-                text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
-                author: "Alex Santhman",
-                role: "Social worker",
-                avatar: "/placeholder.svg?height=40&width=40",
-                rating: 5,
-                timeAgo: "3 months ago",
-              },
-              {
-                id: 2,
-                text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
-                author: "Alex Santhman",
-                role: "Social worker",
-                avatar: "/placeholder.svg?height=40&width=40",
-                rating: 5,
-                timeAgo: "3 months ago",
-              },
-              {
-                id: 3,
-                text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
-                author: "Alex Santhman",
-                role: "Social worker",
-                avatar: "/placeholder.svg?height=40&width=40",
-                rating: 5,
-                timeAgo: "3 months ago",
-              },
-            ].map((testimonial) => (
-              <div key={testimonial.id} className="bg-blue-50 rounded-2xl p-6 relative">
-                {/* Quote Icon */}
-                <div className="text-blue-400 text-4xl font-serif mb-4">"</div>
+          <div className="relative">
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                {
+                  id: 1,
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+                  author: "Alex Santhman",
+                  role: "Social worker",
+                  avatar: "/placeholder.svg?height=40&width=40",
+                  rating: 5,
+                  timeAgo: "3 months ago",
+                },
+                {
+                  id: 2,
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+                  author: "Alex Santhman",
+                  role: "Social worker",
+                  avatar: "/placeholder.svg?height=40&width=40",
+                  rating: 5,
+                  timeAgo: "3 months ago",
+                },
+                {
+                  id: 3,
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+                  author: "Alex Santhman",
+                  role: "Social worker",
+                  avatar: "/placeholder.svg?height=40&width=40",
+                  rating: 5,
+                  timeAgo: "3 months ago",
+                },
+              ].map((testimonial, index) => (
+                <div key={testimonial.id} className="bg-blue-50 rounded-2xl p-6 relative">
+                  {/* Left Arrow on First Testimonial */}
+                  {index === 0 && (
+                    <Button 
+                      variant="outline" 
+                      className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center bg-white shadow-md"
+                      aria-label="Previous testimonials"
+                    >
+                      <ArrowRight className="w-4 h-4 rotate-180 text-gray-600" />
+                    </Button>
+                  )}
 
-                {/* Testimonial Text */}
-                <p className="text-gray-700 text-sm leading-relaxed mb-6">{testimonial.text}</p>
+                  {/* Right Arrow on Last Testimonial */}
+                  {index === 2 && (
+                    <Button 
+                      variant="outline" 
+                      className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center bg-white shadow-md"
+                      aria-label="Next testimonials"
+                    >
+                      <ArrowRight className="w-4 h-4 text-gray-600" />
+                    </Button>
+                  )}
 
-                {/* Author Info */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src={testimonial.avatar || "/placeholder.svg"}
-                      alt={testimonial.author}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
-                    <div>
-                      <h4 className="font-semibold text-gray-900 text-sm">{testimonial.author}</h4>
-                      <p className="text-gray-600 text-xs">{testimonial.role}</p>
+                  {/* Quote Icon */}
+                  <div className="text-blue-400 text-4xl font-serif mb-4">"</div>
+
+                  {/* Testimonial Text */}
+                  <p className="text-gray-700 text-sm leading-relaxed mb-6">{testimonial.text}</p>
+
+                  {/* Author Info */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src={testimonial.avatar || "/placeholder.svg"}
+                        alt={testimonial.author}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm">{testimonial.author}</h4>
+                        <p className="text-gray-600 text-xs">{testimonial.role}</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="text-right">
-                    {/* Star Rating */}
-                    <div className="flex gap-1 mb-1">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      ))}
+                    <div className="text-right">
+                      {/* Star Rating */}
+                      <div className="flex gap-1 mb-1">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500">{testimonial.timeAgo}</p>
                     </div>
-                    <p className="text-xs text-gray-500">{testimonial.timeAgo}</p>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -290,7 +418,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="pt-8 pb-4">
+              <footer className="pt-0 pb-0 mt-16">
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-5 gap-8">
             {/* Connect with us */}
@@ -411,6 +539,12 @@ export default function LandingPage() {
           className="w-full object-cover"
         />
       </div>
+
+      {/* Diet Plan Modal */}
+      <DietPlanModal isOpen={showModal} onClose={closeModal} />
+      
+      {/* Diet Plan Popup Modal */}
+      <DietPlanPopupModal isOpen={showPopup} onClose={closePopup} />
     </div>
   )
 }
