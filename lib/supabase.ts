@@ -78,15 +78,14 @@ export const createMemberProfile = async (userData: {
   console.log("Creating member profile with data:", userData)
   
   try {
-    // First try with service client
-    let { data, error } = await supabaseService
+    const { data, error } = await supabaseService
       .from('members')
       .insert({
         user_id: userData.user_id,
         username: userData.username,
         email: userData.email,
         contact: userData.contact,
-        full_name: userData.full_name,
+        full_name: userData.full_name || userData.username,
         join_date: new Date().toISOString(),
         total_workouts: 0,
         current_streak: 0,
@@ -97,40 +96,10 @@ export const createMemberProfile = async (userData: {
       .single()
 
     if (error) {
-      console.error("Error creating member profile with service client:", error)
-      
-      // If service client fails, try with regular client
-      if (supabaseServiceKey) {
-        console.log("Retrying with regular client...")
-        const { data: retryData, error: retryError } = await supabase
-          .from('members')
-          .insert({
-            user_id: userData.user_id,
-            username: userData.username,
-            email: userData.email,
-            contact: userData.contact,
-            full_name: userData.full_name,
-            join_date: new Date().toISOString(),
-            total_workouts: 0,
-            current_streak: 0,
-            longest_streak: 0,
-            total_calories_burned: 0,
-          })
-          .select()
-          .single()
-        
-        if (retryError) {
-          console.error("Error creating member profile with regular client:", retryError)
-          return { data: null, error: retryError }
-        } else {
-          console.log("Member profile created successfully with regular client:", retryData)
-          return { data: retryData, error: null }
-        }
-      }
-      
+      console.error("Error creating member profile:", error)
       return { data: null, error }
     } else {
-      console.log("Member profile created successfully with service client:", data)
+      console.log("Member profile created successfully:", data)
       return { data, error: null }
     }
   } catch (err) {
@@ -151,8 +120,7 @@ export const createTrainerProfile = async (userData: {
   console.log("Creating trainer profile with data:", userData)
   
   try {
-    // First try with service client
-    let { data, error } = await supabaseService
+    const { data, error } = await supabaseService
       .from('trainers')
       .insert({
         user_id: userData.user_id,
@@ -176,46 +144,10 @@ export const createTrainerProfile = async (userData: {
       .single()
 
     if (error) {
-      console.error("Error creating trainer profile with service client:", error)
-      
-      // If service client fails, try with regular client
-      if (supabaseServiceKey) {
-        console.log("Retrying with regular client...")
-        const { data: retryData, error: retryError } = await supabase
-          .from('trainers')
-          .insert({
-            user_id: userData.user_id,
-            username: userData.username,
-            email: userData.email,
-            contact: userData.contact,
-            full_name: userData.full_name,
-            specialization: userData.specialization || [],
-            hourly_rate: userData.hourly_rate || 50,
-            experience_years: 0,
-            rating: 0,
-            total_reviews: 0,
-            total_clients: 0,
-            active_clients: 0,
-            total_sessions: 0,
-            join_date: new Date().toISOString(),
-            is_verified: false,
-            is_available: true,
-          })
-          .select()
-          .single()
-        
-        if (retryError) {
-          console.error("Error creating trainer profile with regular client:", retryError)
-          return { data: null, error: retryError }
-        } else {
-          console.log("Trainer profile created successfully with regular client:", retryData)
-          return { data: retryData, error: null }
-        }
-      }
-      
+      console.error("Error creating trainer profile:", error)
       return { data: null, error }
     } else {
-      console.log("Trainer profile created successfully with service client:", data)
+      console.log("Trainer profile created successfully:", data)
       return { data, error: null }
     }
   } catch (err) {
@@ -288,4 +220,83 @@ export const getAllTrainers = async () => {
     .order('created_at', { ascending: false })
 
   return { data, error }
+}
+
+// Test function to directly test database insertion
+export const testDatabaseInsertion = async () => {
+  console.log("Testing direct database insertion...")
+  
+  const testData = {
+    user_id: 'test-' + Date.now(),
+    username: 'testuser',
+    email: 'test@example.com',
+    contact: '+1234567890',
+    full_name: 'Test User'
+  }
+  
+  try {
+    // Test with service client
+    const { data, error } = await supabaseService
+      .from('members')
+      .insert(testData)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error("Service client insertion failed:", error)
+      
+      // Test with regular client
+      const { data: regData, error: regError } = await supabase
+        .from('members')
+        .insert(testData)
+        .select()
+        .single()
+      
+      if (regError) {
+        console.error("Regular client insertion also failed:", regError)
+        return { success: false, error: regError }
+      } else {
+        console.log("Regular client insertion succeeded:", regData)
+        return { success: true, data: regData }
+      }
+    } else {
+      console.log("Service client insertion succeeded:", data)
+      return { success: true, data }
+    }
+  } catch (err) {
+    console.error("Unexpected error in test insertion:", err)
+    return { success: false, error: err }
+  }
+}
+
+// Debug function for browser console
+export const debugDatabase = () => {
+  console.log("🔍 Database Debug Info:")
+  console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+  console.log("Service Key Present:", !!process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY)
+  console.log("Service Key Length:", process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY?.length || 0)
+  
+  // Test basic connection
+  supabase.from('members').select('count').limit(1).then(({ data, error }) => {
+    if (error) {
+      console.error("❌ Basic connection failed:", error)
+    } else {
+      console.log("✅ Basic connection successful")
+    }
+  })
+  
+  // Test service connection
+  supabaseService.from('members').select('count').limit(1).then(({ data, error }) => {
+    if (error) {
+      console.error("❌ Service connection failed:", error)
+    } else {
+      console.log("✅ Service connection successful")
+    }
+  })
+}
+
+// Make debug function available globally
+if (typeof window !== 'undefined') {
+  (window as any).debugDatabase = debugDatabase
+  ;(window as any).testDatabaseInsertion = testDatabaseInsertion
 } 

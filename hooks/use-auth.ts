@@ -131,6 +131,8 @@ export function useAuth() {
           
           console.log("Profile data to create:", profileData)
           
+          let profileCreated = false
+          
           if (userType === 'trainer') {
             console.log("Creating trainer profile...")
             const result = await createTrainerProfile(profileData)
@@ -138,6 +140,7 @@ export function useAuth() {
               console.error("Failed to create trainer profile:", result.error)
             } else {
               console.log('Created trainer profile for sign-in user:', result.data)
+              profileCreated = true
             }
           } else {
             console.log("Creating member profile...")
@@ -146,7 +149,58 @@ export function useAuth() {
               console.error("Failed to create member profile:", result.error)
             } else {
               console.log('Created member profile for sign-in user:', result.data)
+              profileCreated = true
             }
+          }
+          
+          // If profile creation failed, try one more time with different approach
+          if (!profileCreated) {
+            console.log("Profile creation failed, trying alternative approach...")
+            try {
+              // Try direct insertion without the wrapper function
+              const { data: directData, error: directError } = await supabaseService
+                .from(userType === 'trainer' ? 'trainers' : 'members')
+                .insert({
+                  user_id: profileData.user_id,
+                  username: profileData.username,
+                  email: profileData.email,
+                  contact: profileData.contact,
+                  full_name: profileData.full_name,
+                  join_date: new Date().toISOString(),
+                  ...(userType === 'trainer' ? {
+                    specialization: [],
+                    hourly_rate: 50,
+                    experience_years: 0,
+                    rating: 0,
+                    total_reviews: 0,
+                    total_clients: 0,
+                    active_clients: 0,
+                    total_sessions: 0,
+                    is_verified: false,
+                    is_available: true,
+                  } : {
+                    total_workouts: 0,
+                    current_streak: 0,
+                    longest_streak: 0,
+                    total_calories_burned: 0,
+                  })
+                })
+                .select()
+                .single()
+              
+              if (directError) {
+                console.error("Direct insertion also failed:", directError)
+              } else {
+                console.log("Direct insertion succeeded:", directData)
+                profileCreated = true
+              }
+            } catch (directErr) {
+              console.error("Direct insertion error:", directErr)
+            }
+          }
+          
+          if (!profileCreated) {
+            console.error("All profile creation attempts failed!")
           }
         } else {
           console.log("User already has a profile in database")
@@ -337,6 +391,8 @@ export function useAuth() {
           
           console.log("Profile data to create:", profileData)
           
+          let profileCreated = false
+          
           if (userType === 'trainer') {
             console.log("Creating trainer profile...")
             const result = await createTrainerProfile(profileData)
@@ -344,6 +400,7 @@ export function useAuth() {
               console.error("Failed to create trainer profile:", result.error)
             } else {
               console.log('Created trainer profile for OTP user:', result.data)
+              profileCreated = true
             }
           } else {
             console.log("Creating member profile...")
@@ -352,7 +409,58 @@ export function useAuth() {
               console.error("Failed to create member profile:", result.error)
             } else {
               console.log('Created member profile for OTP user:', result.data)
+              profileCreated = true
             }
+          }
+          
+          // If profile creation failed, try one more time with different approach
+          if (!profileCreated) {
+            console.log("Profile creation failed, trying alternative approach...")
+            try {
+              // Try direct insertion without the wrapper function
+              const { data: directData, error: directError } = await supabaseService
+                .from(userType === 'trainer' ? 'trainers' : 'members')
+                .insert({
+                  user_id: profileData.user_id,
+                  username: profileData.username,
+                  email: profileData.email,
+                  contact: profileData.contact,
+                  full_name: profileData.full_name,
+                  join_date: new Date().toISOString(),
+                  ...(userType === 'trainer' ? {
+                    specialization: [],
+                    hourly_rate: 50,
+                    experience_years: 0,
+                    rating: 0,
+                    total_reviews: 0,
+                    total_clients: 0,
+                    active_clients: 0,
+                    total_sessions: 0,
+                    is_verified: false,
+                    is_available: true,
+                  } : {
+                    total_workouts: 0,
+                    current_streak: 0,
+                    longest_streak: 0,
+                    total_calories_burned: 0,
+                  })
+                })
+                .select()
+                .single()
+              
+              if (directError) {
+                console.error("Direct insertion also failed:", directError)
+              } else {
+                console.log("Direct insertion succeeded:", directData)
+                profileCreated = true
+              }
+            } catch (directErr) {
+              console.error("Direct insertion error:", directErr)
+            }
+          }
+          
+          if (!profileCreated) {
+            console.error("All profile creation attempts failed!")
           }
         } else {
           console.log("User already has a profile in database")
