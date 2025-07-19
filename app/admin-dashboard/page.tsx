@@ -36,7 +36,6 @@ import {
   Target,
   Award
 } from "lucide-react"
-import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 
 interface Member {
@@ -104,6 +103,20 @@ export default function AdminDashboardPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'trainers'>('overview')
   const [dataLoading, setDataLoading] = useState(true)
+  const [supabase, setSupabase] = useState<any>(null)
+
+  useEffect(() => {
+    // Load supabase dynamically
+    const loadSupabase = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase')
+        setSupabase(supabase)
+      } catch (error) {
+        console.error('Error loading Supabase:', error)
+      }
+    }
+    loadSupabase()
+  }, [])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -129,10 +142,10 @@ export default function AdminDashboardPage() {
   }, [user, loading, router])
 
   useEffect(() => {
-    if (user?.email === 'gouravpanda2k04@gmail.com') {
+    if (user?.email === 'gouravpanda2k04@gmail.com' && supabase) {
       fetchAllData()
     }
-  }, [user])
+  }, [user, supabase])
 
   useEffect(() => {
     // Filter data based on search term
@@ -156,6 +169,11 @@ export default function AdminDashboardPage() {
   }, [searchTerm, members, trainers])
 
   const fetchAllData = async () => {
+    if (!supabase) {
+      console.log('Supabase not loaded yet')
+      return
+    }
+
     setDataLoading(true)
     try {
       // Fetch members
