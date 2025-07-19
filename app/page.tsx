@@ -13,6 +13,7 @@ import DietPlanPopupModal from "@/components/diet-plan-popup-modal"
 import { useDietPlanPopup } from "@/hooks/use-diet-plan-popup"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 
 
 export default function LandingPage() {
@@ -24,23 +25,65 @@ export default function LandingPage() {
 
   // Redirect authenticated users to their dashboard
   useEffect(() => {
-    if (!loading && user) {
-      const userType = user.user_metadata?.userType || 'member'
-      const userEmail = user.email?.toLowerCase()
-      
-      // Check if user is admin
-      if (userEmail === 'gouravpanda2k04@gmail.com') {
-        router.push("/admin-dashboard")
-        return
-      }
-      
-      // Redirect to role-specific dashboard
-      if (userType === 'trainer') {
-        router.push("/trainer-dashboard")
-      } else {
-        router.push("/member-dashboard")
+    const handleRedirect = async () => {
+      if (!loading && user) {
+        const userType = user.user_metadata?.userType || 'member'
+        const userEmail = user.email?.toLowerCase()
+        
+        console.log("Landing page - User type from metadata:", userType)
+        console.log("Landing page - User email:", userEmail)
+        console.log("Landing page - Full user metadata:", user.user_metadata)
+        
+        // Check if user is admin
+        if (userEmail === 'gouravpanda2k04@gmail.com') {
+          router.push("/admin-dashboard")
+          return
+        }
+        
+        // Try to determine user type from database if metadata is not set
+        if (!user.user_metadata?.userType) {
+          console.log("No userType in metadata, checking database...")
+          try {
+            // Check if user exists in trainers table
+            const { data: trainerData } = await supabase
+              .from('trainers')
+              .select('id')
+              .eq('user_id', user.id)
+              .single()
+            
+            if (trainerData) {
+              console.log("User found in trainers table, redirecting to trainer dashboard")
+              router.push("/trainer-dashboard")
+              return
+            }
+            
+            // Check if user exists in members table
+            const { data: memberData } = await supabase
+              .from('members')
+              .select('id')
+              .eq('user_id', user.id)
+              .single()
+            
+            if (memberData) {
+              console.log("User found in members table, redirecting to member dashboard")
+              router.push("/member-dashboard")
+              return
+            }
+          } catch (error) {
+            console.log("Error checking database for user type:", error)
+          }
+        }
+        
+        // Redirect to role-specific dashboard based on metadata
+        if (userType === 'trainer') {
+          router.push("/trainer-dashboard")
+        } else {
+          router.push("/member-dashboard")
+        }
       }
     }
+
+    handleRedirect()
   }, [user, loading, router])
 
   // Show loading while checking authentication

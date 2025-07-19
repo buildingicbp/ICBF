@@ -31,37 +31,44 @@ export default function AuthCallbackPage() {
         if (data.session) {
           const user = data.session.user
           console.log("User authenticated:", user.email)
+          console.log("Current user metadata:", user.user_metadata)
           
-          // Update user metadata with userType if it's a new user
-          if (user && !user.user_metadata?.userType) {
-            console.log("Updating user metadata with userType:", userType)
-            const { error: updateError } = await supabase.auth.updateUser({
-              data: { userType: userType }
-            })
-            
-            if (updateError) {
-              console.error("Error updating user metadata:", updateError)
-            } else {
-              console.log("User metadata updated successfully")
-            }
+          // Always update user metadata with userType to ensure it's set correctly
+          console.log("Updating user metadata with userType:", userType)
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: { userType: userType }
+          })
+          
+          if (updateError) {
+            console.error("Error updating user metadata:", updateError)
+          } else {
+            console.log("User metadata updated successfully")
           }
           
+          // Wait a moment for the metadata to be updated, then get the fresh session
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // Get the updated session to ensure we have the latest metadata
+          const { data: updatedSessionData } = await supabase.auth.getSession()
+          const updatedUser = updatedSessionData.session?.user
+          console.log("Updated user metadata:", updatedUser?.user_metadata)
+          
           // Check if user has a profile in the database, create if not
-          if (user) {
+          if (updatedUser) {
             try {
               console.log("Checking for existing profile...")
               // Check if user exists in members table
               const { data: memberData } = await supabase
                 .from('members')
                 .select('id')
-                .eq('user_id', user.id)
+                .eq('user_id', updatedUser.id)
                 .single()
               
               // Check if user exists in trainers table
               const { data: trainerData } = await supabase
                 .from('trainers')
                 .select('id')
-                .eq('user_id', user.id)
+                .eq('user_id', updatedUser.id)
                 .single()
               
               console.log("Member data:", memberData)
@@ -71,11 +78,11 @@ export default function AuthCallbackPage() {
               if (!memberData && !trainerData) {
                 console.log("Creating new profile for user")
                 const profileData = {
-                  user_id: user.id,
-                  username: user.user_metadata?.full_name || user.email?.split('@')[0] || 'user',
-                  email: user.email || '',
-                  contact: user.user_metadata?.phone || '',
-                  full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+                  user_id: updatedUser.id,
+                  username: updatedUser.user_metadata?.full_name || updatedUser.email?.split('@')[0] || 'user',
+                  email: updatedUser.email || '',
+                  contact: updatedUser.user_metadata?.phone || '',
+                  full_name: updatedUser.user_metadata?.full_name || updatedUser.user_metadata?.name || updatedUser.email?.split('@')[0] || 'User',
                 }
                 
                 if (userType === 'trainer') {
