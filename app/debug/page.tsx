@@ -256,6 +256,172 @@ export default function DebugPage() {
     }
   }
 
+  // Add new function to fix existing users without userType
+  const fixUserType = async () => {
+    setLoading(true)
+    setDebugResults([])
+    
+    try {
+      addLog("🔧 Fixing user type for existing user...")
+      
+      // Get current user
+      const { data: sessionData } = await supabase.auth.getSession()
+      const user = sessionData.session?.user
+      
+      if (!user) {
+        addLog("❌ No user logged in for fixing")
+        return
+      }
+      
+      addLog(`👤 Fixing user: ${user.email}`)
+      addLog(`📧 Current metadata: ${JSON.stringify(user.user_metadata)}`)
+      
+      // Check if user already has userType
+      if (user.user_metadata?.userType) {
+        addLog(`✅ User already has userType: ${user.user_metadata.userType}`)
+        return
+      }
+      
+      // Check existing profiles to determine user type
+      const { data: memberData } = await supabaseService
+        .from('members')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+      
+      const { data: trainerData } = await supabaseService
+        .from('trainers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+      
+      addLog(`📊 Member profile exists: ${!!memberData}`)
+      addLog(`📊 Trainer profile exists: ${!!trainerData}`)
+      
+      let userType = 'member'
+      if (trainerData) {
+        userType = 'trainer'
+        addLog("🎯 User has trainer profile, setting userType to trainer")
+      } else if (memberData) {
+        userType = 'member'
+        addLog("🎯 User has member profile, setting userType to member")
+      } else {
+        addLog("⚠️ User has no profile, defaulting to member")
+      }
+      
+      // Update user metadata with userType
+      addLog(`🔄 Updating user metadata with userType: ${userType}`)
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { userType: userType }
+      })
+      
+      if (updateError) {
+        addLog(`❌ Failed to update user metadata: ${updateError.message}`)
+      } else {
+        addLog("✅ User metadata updated successfully")
+        
+        // Refresh session to get updated metadata
+        const { data: refreshData } = await supabase.auth.getSession()
+        const updatedUser = refreshData.session?.user
+        addLog(`📧 Updated metadata: ${JSON.stringify(updatedUser?.user_metadata)}`)
+      }
+      
+      addLog("✅ User type fix completed")
+      
+    } catch (error) {
+      addLog(`❌ Error fixing user type: ${error}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Add function to manually set user type
+  const setUserType = async (type: 'member' | 'trainer') => {
+    setLoading(true)
+    setDebugResults([])
+    
+    try {
+      addLog(`🎯 Manually setting user type to: ${type}`)
+      
+      // Get current user
+      const { data: sessionData } = await supabase.auth.getSession()
+      const user = sessionData.session?.user
+      
+      if (!user) {
+        addLog("❌ No user logged in")
+        return
+      }
+      
+      addLog(`👤 Setting type for user: ${user.email}`)
+      
+      // Update user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { userType: type }
+      })
+      
+      if (updateError) {
+        addLog(`❌ Failed to update user metadata: ${updateError.message}`)
+      } else {
+        addLog("✅ User metadata updated successfully")
+        
+        // Check if user has a profile, create if not
+        const { data: memberData } = await supabaseService
+          .from('members')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+        
+        const { data: trainerData } = await supabaseService
+          .from('trainers')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (!memberData && !trainerData) {
+          addLog("🆕 Creating new profile...")
+          
+          const profileData = {
+            user_id: user.id,
+            username: user.user_metadata?.full_name || user.email?.split('@')[0] || 'user',
+            email: user.email || '',
+            contact: user.user_metadata?.phone || '',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+          }
+          
+          if (type === 'trainer') {
+            const result = await createTrainerProfile(profileData)
+            if (result.error) {
+              addLog(`❌ Failed to create trainer profile: ${result.error.message}`)
+            } else {
+              addLog(`✅ Trainer profile created: ${JSON.stringify(result.data)}`)
+            }
+          } else {
+            const result = await createMemberProfile(profileData)
+            if (result.error) {
+              addLog(`❌ Failed to create member profile: ${result.error.message}`)
+            } else {
+              addLog(`✅ Member profile created: ${JSON.stringify(result.data)}`)
+            }
+          }
+        } else {
+          addLog("✅ User already has a profile")
+        }
+        
+        // Refresh session
+        const { data: refreshData } = await supabase.auth.getSession()
+        const updatedUser = refreshData.session?.user
+        addLog(`📧 Final metadata: ${JSON.stringify(updatedUser?.user_metadata)}`)
+      }
+      
+      addLog("✅ User type set successfully")
+      
+    } catch (error) {
+      addLog(`❌ Error setting user type: ${error}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
@@ -277,6 +443,32 @@ export default function DebugPage() {
           >
             {loading ? "Testing..." : "Test Sign-Up Flow"}
           </button>
+          
+          <button
+            onClick={fixUserType} 
+            disabled={loading}
+            className="w-full px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+          >
+            {loading ? "Fixing..." : "Fix User Type"}
+          </button>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setUserType('member')} 
+              disabled={loading}
+              className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              Set as Member
+            </button>
+            
+            <button
+              onClick={() => setUserType('trainer')} 
+              disabled={loading}
+              className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              Set as Trainer
+            </button>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6 mt-6">
