@@ -74,10 +74,35 @@ export default function AuthCallbackPage() {
               console.log("Member data:", memberData)
               console.log("Trainer data:", trainerData)
               
+              // Determine user type - prioritize database over metadata
+              let finalUserType = userType
+              
+              if (trainerData) {
+                // User exists in trainers table
+                finalUserType = 'trainer'
+              } else if (memberData) {
+                // User exists in members table
+                finalUserType = 'member'
+              }
+              
+              // Update user metadata with the final userType if it changed
+              if (finalUserType !== userType) {
+                console.log("Updating user metadata with final userType:", finalUserType)
+                const { error: finalUpdateError } = await supabase.auth.updateUser({
+                  data: { userType: finalUserType }
+                })
+                
+                if (finalUpdateError) {
+                  console.error("Error updating user metadata with final userType:", finalUpdateError)
+                } else {
+                  console.log("User metadata updated with final userType successfully")
+                }
+              }
+              
               // If user doesn't exist in either table, create profile
               if (!memberData && !trainerData) {
                 console.log("Creating new profile for user")
-                console.log("Creating profile for userType:", userType)
+                console.log("Creating profile for userType:", finalUserType)
                 
                 const profileData = {
                   user_id: updatedUser.id,
@@ -89,7 +114,7 @@ export default function AuthCallbackPage() {
                 
                 console.log("Profile data to create:", profileData)
                 
-                if (userType === 'trainer') {
+                if (finalUserType === 'trainer') {
                   console.log("Creating trainer profile...")
                   const result = await createTrainerProfile(profileData)
                   if (result.error) {
@@ -174,6 +199,31 @@ export default function AuthCallbackPage() {
                     .eq('user_id', user.id)
                     .single()
                   
+                  // Determine user type - prioritize database over metadata
+                  let finalUserType = userType
+                  
+                  if (trainerData) {
+                    // User exists in trainers table
+                    finalUserType = 'trainer'
+                  } else if (memberData) {
+                    // User exists in members table
+                    finalUserType = 'member'
+                  }
+                  
+                  // Update user metadata with the final userType if it changed
+                  if (finalUserType !== userType) {
+                    console.log("Updating user metadata with final userType:", finalUserType)
+                    const { error: finalUpdateError } = await supabase.auth.updateUser({
+                      data: { userType: finalUserType }
+                    })
+                    
+                    if (finalUpdateError) {
+                      console.error("Error updating user metadata with final userType:", finalUpdateError)
+                    } else {
+                      console.log("User metadata updated with final userType successfully")
+                    }
+                  }
+                  
                   // If user doesn't exist in either table, create profile
                   if (!memberData && !trainerData) {
                     const profileData = {
@@ -184,7 +234,7 @@ export default function AuthCallbackPage() {
                       full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
                     }
                     
-                    if (userType === 'trainer') {
+                    if (finalUserType === 'trainer') {
                       await createTrainerProfile(profileData)
                       console.log('Created trainer profile for OAuth user')
                     } else {

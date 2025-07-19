@@ -117,6 +117,10 @@ CREATE POLICY "Members can update own profile" ON members
 CREATE POLICY "Members can insert own profile" ON members
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- Allow service role to manage all member profiles (for profile creation)
+CREATE POLICY "Service role can manage all member profiles" ON members
+  FOR ALL USING (auth.role() = 'service_role');
+
 -- RLS Policies for Trainers
 CREATE POLICY "Trainers can view own profile" ON trainers
   FOR SELECT USING (auth.uid() = user_id);
@@ -126,6 +130,10 @@ CREATE POLICY "Trainers can update own profile" ON trainers
 
 CREATE POLICY "Trainers can insert own profile" ON trainers
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Allow service role to manage all trainer profiles (for profile creation)
+CREATE POLICY "Service role can manage all trainer profiles" ON trainers
+  FOR ALL USING (auth.role() = 'service_role');
 
 -- RLS Policies for Sessions
 CREATE POLICY "Users can view sessions they're involved in" ON sessions
@@ -179,30 +187,41 @@ CREATE POLICY "Members can update own goals" ON goals
     auth.uid() IN (SELECT user_id FROM members WHERE id = member_id)
   );
 
--- Admin policies (for gouravpanda2k04@gmail.com)
+-- Admin policies for specific email
 CREATE POLICY "Admin can view all members" ON members
   FOR SELECT USING (
-    auth.jwt() ->> 'email' = 'gouravpanda2k04@gmail.com'
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.email = 'gouravpanda2k04@gmail.com'
+    )
+  );
+
+CREATE POLICY "Admin can manage all members" ON members
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.email = 'gouravpanda2k04@gmail.com'
+    )
   );
 
 CREATE POLICY "Admin can view all trainers" ON trainers
   FOR SELECT USING (
-    auth.jwt() ->> 'email' = 'gouravpanda2k04@gmail.com'
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.email = 'gouravpanda2k04@gmail.com'
+    )
   );
 
-CREATE POLICY "Admin can view all sessions" ON sessions
-  FOR SELECT USING (
-    auth.jwt() ->> 'email' = 'gouravpanda2k04@gmail.com'
-  );
-
-CREATE POLICY "Admin can view all workouts" ON workouts
-  FOR SELECT USING (
-    auth.jwt() ->> 'email' = 'gouravpanda2k04@gmail.com'
-  );
-
-CREATE POLICY "Admin can view all goals" ON goals
-  FOR SELECT USING (
-    auth.jwt() ->> 'email' = 'gouravpanda2k04@gmail.com'
+CREATE POLICY "Admin can manage all trainers" ON trainers
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.email = 'gouravpanda2k04@gmail.com'
+    )
   );
 
 -- Create indexes for better performance

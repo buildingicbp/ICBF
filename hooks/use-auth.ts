@@ -83,13 +83,10 @@ export function useAuth() {
           .eq('user_id', data.user.id)
           .single()
         
-        // Determine user type
+        // Determine user type - prioritize database over metadata
         let userType = 'member'
         
-        if (memberData && trainerData) {
-          // User exists in both tables (shouldn't happen, but handle it)
-          userType = data.user.user_metadata?.userType || 'member'
-        } else if (trainerData) {
+        if (trainerData) {
           // User exists in trainers table
           userType = 'trainer'
         } else if (memberData) {
@@ -292,13 +289,10 @@ export function useAuth() {
           .eq('user_id', data.user.id)
           .single()
         
-        // Determine user type
+        // Determine user type - prioritize database over metadata
         let userType = 'member'
         
-        if (memberData && trainerData) {
-          // User exists in both tables (shouldn't happen, but handle it)
-          userType = data.user.user_metadata?.userType || 'member'
-        } else if (trainerData) {
+        if (trainerData) {
           // User exists in trainers table
           userType = 'trainer'
         } else if (memberData) {

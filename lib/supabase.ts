@@ -7,7 +7,7 @@ const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Service client for admin operations (bypasses RLS)
-// Fallback to regular client if service key is not available
+// Use service key if available, otherwise use regular client
 export const supabaseService = supabaseServiceKey 
   ? createClient(supabaseUrl, supabaseServiceKey)
   : supabase
@@ -77,30 +77,66 @@ export const createMemberProfile = async (userData: {
 }) => {
   console.log("Creating member profile with data:", userData)
   
-  const { data, error } = await supabaseService
-    .from('members')
-    .insert({
-      user_id: userData.user_id,
-      username: userData.username,
-      email: userData.email,
-      contact: userData.contact,
-      full_name: userData.full_name,
-      join_date: new Date().toISOString(),
-      total_workouts: 0,
-      current_streak: 0,
-      longest_streak: 0,
-      total_calories_burned: 0,
-    })
-    .select()
-    .single()
+  try {
+    // First try with service client
+    let { data, error } = await supabaseService
+      .from('members')
+      .insert({
+        user_id: userData.user_id,
+        username: userData.username,
+        email: userData.email,
+        contact: userData.contact,
+        full_name: userData.full_name,
+        join_date: new Date().toISOString(),
+        total_workouts: 0,
+        current_streak: 0,
+        longest_streak: 0,
+        total_calories_burned: 0,
+      })
+      .select()
+      .single()
 
-  if (error) {
-    console.error("Error creating member profile:", error)
-  } else {
-    console.log("Member profile created successfully:", data)
+    if (error) {
+      console.error("Error creating member profile with service client:", error)
+      
+      // If service client fails, try with regular client
+      if (supabaseServiceKey) {
+        console.log("Retrying with regular client...")
+        const { data: retryData, error: retryError } = await supabase
+          .from('members')
+          .insert({
+            user_id: userData.user_id,
+            username: userData.username,
+            email: userData.email,
+            contact: userData.contact,
+            full_name: userData.full_name,
+            join_date: new Date().toISOString(),
+            total_workouts: 0,
+            current_streak: 0,
+            longest_streak: 0,
+            total_calories_burned: 0,
+          })
+          .select()
+          .single()
+        
+        if (retryError) {
+          console.error("Error creating member profile with regular client:", retryError)
+          return { data: null, error: retryError }
+        } else {
+          console.log("Member profile created successfully with regular client:", retryData)
+          return { data: retryData, error: null }
+        }
+      }
+      
+      return { data: null, error }
+    } else {
+      console.log("Member profile created successfully with service client:", data)
+      return { data, error: null }
+    }
+  } catch (err) {
+    console.error("Unexpected error creating member profile:", err)
+    return { data: null, error: err as Error }
   }
-
-  return { data, error }
 }
 
 export const createTrainerProfile = async (userData: {
@@ -114,36 +150,78 @@ export const createTrainerProfile = async (userData: {
 }) => {
   console.log("Creating trainer profile with data:", userData)
   
-  const { data, error } = await supabaseService
-    .from('trainers')
-    .insert({
-      user_id: userData.user_id,
-      username: userData.username,
-      email: userData.email,
-      contact: userData.contact,
-      full_name: userData.full_name,
-      specialization: userData.specialization || [],
-      hourly_rate: userData.hourly_rate || 50,
-      experience_years: 0,
-      rating: 0,
-      total_reviews: 0,
-      total_clients: 0,
-      active_clients: 0,
-      total_sessions: 0,
-      join_date: new Date().toISOString(),
-      is_verified: false,
-      is_available: true,
-    })
-    .select()
-    .single()
+  try {
+    // First try with service client
+    let { data, error } = await supabaseService
+      .from('trainers')
+      .insert({
+        user_id: userData.user_id,
+        username: userData.username,
+        email: userData.email,
+        contact: userData.contact,
+        full_name: userData.full_name,
+        specialization: userData.specialization || [],
+        hourly_rate: userData.hourly_rate || 50,
+        experience_years: 0,
+        rating: 0,
+        total_reviews: 0,
+        total_clients: 0,
+        active_clients: 0,
+        total_sessions: 0,
+        join_date: new Date().toISOString(),
+        is_verified: false,
+        is_available: true,
+      })
+      .select()
+      .single()
 
-  if (error) {
-    console.error("Error creating trainer profile:", error)
-  } else {
-    console.log("Trainer profile created successfully:", data)
+    if (error) {
+      console.error("Error creating trainer profile with service client:", error)
+      
+      // If service client fails, try with regular client
+      if (supabaseServiceKey) {
+        console.log("Retrying with regular client...")
+        const { data: retryData, error: retryError } = await supabase
+          .from('trainers')
+          .insert({
+            user_id: userData.user_id,
+            username: userData.username,
+            email: userData.email,
+            contact: userData.contact,
+            full_name: userData.full_name,
+            specialization: userData.specialization || [],
+            hourly_rate: userData.hourly_rate || 50,
+            experience_years: 0,
+            rating: 0,
+            total_reviews: 0,
+            total_clients: 0,
+            active_clients: 0,
+            total_sessions: 0,
+            join_date: new Date().toISOString(),
+            is_verified: false,
+            is_available: true,
+          })
+          .select()
+          .single()
+        
+        if (retryError) {
+          console.error("Error creating trainer profile with regular client:", retryError)
+          return { data: null, error: retryError }
+        } else {
+          console.log("Trainer profile created successfully with regular client:", retryData)
+          return { data: retryData, error: null }
+        }
+      }
+      
+      return { data: null, error }
+    } else {
+      console.log("Trainer profile created successfully with service client:", data)
+      return { data, error: null }
+    }
+  } catch (err) {
+    console.error("Unexpected error creating trainer profile:", err)
+    return { data: null, error: err as Error }
   }
-
-  return { data, error }
 }
 
 export const getMemberProfile = async (userId: string) => {
