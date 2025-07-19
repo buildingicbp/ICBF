@@ -27,12 +27,18 @@ export default function LandingPage() {
   useEffect(() => {
     const handleRedirect = async () => {
       if (!loading && user) {
-        const userType = user.user_metadata?.userType || 'member'
-        const userEmail = user.email?.toLowerCase()
+        // Force refresh session to get latest metadata
+        const { data: sessionData } = await supabase.auth.getSession()
+        const currentUser = sessionData.session?.user || user
+        
+        console.log("Landing page - Current user metadata:", currentUser.user_metadata)
+        
+        const userType = currentUser.user_metadata?.userType || 'member'
+        const userEmail = currentUser.email?.toLowerCase()
         
         console.log("Landing page - User type from metadata:", userType)
         console.log("Landing page - User email:", userEmail)
-        console.log("Landing page - Full user metadata:", user.user_metadata)
+        console.log("Landing page - Full user metadata:", currentUser.user_metadata)
         
         // Check if user is admin
         if (userEmail === 'gouravpanda2k04@gmail.com') {
@@ -41,14 +47,14 @@ export default function LandingPage() {
         }
         
         // Try to determine user type from database if metadata is not set
-        if (!user.user_metadata?.userType) {
+        if (!currentUser.user_metadata?.userType) {
           console.log("No userType in metadata, checking database...")
           try {
             // Check if user exists in trainers table
             const { data: trainerData } = await supabase
               .from('trainers')
               .select('id')
-              .eq('user_id', user.id)
+              .eq('user_id', currentUser.id)
               .single()
             
             if (trainerData) {
@@ -61,7 +67,7 @@ export default function LandingPage() {
             const { data: memberData } = await supabase
               .from('members')
               .select('id')
-              .eq('user_id', user.id)
+              .eq('user_id', currentUser.id)
               .single()
             
             if (memberData) {
@@ -83,7 +89,12 @@ export default function LandingPage() {
       }
     }
 
-    handleRedirect()
+    // Add a small delay to ensure session is fully loaded
+    const timer = setTimeout(() => {
+      handleRedirect()
+    }, 500)
+
+    return () => clearTimeout(timer)
   }, [user, loading, router])
 
   // Show loading while checking authentication

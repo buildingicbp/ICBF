@@ -49,7 +49,7 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, selectedUserType?: 'member' | 'trainer') => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }))
     
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -83,12 +83,21 @@ export function useAuth() {
           .eq('user_id', data.user.id)
           .single()
         
-        // Determine user type based on which table they exist in
+        // Determine user type
         let userType = 'member'
-        if (trainerData) {
+        
+        if (memberData && trainerData) {
+          // User exists in both tables (shouldn't happen, but handle it)
+          userType = data.user.user_metadata?.userType || 'member'
+        } else if (trainerData) {
+          // User exists in trainers table
           userType = 'trainer'
         } else if (memberData) {
+          // User exists in members table
           userType = 'member'
+        } else {
+          // New user - use the selected user type
+          userType = selectedUserType || 'member'
         }
         
         // Update user metadata with the correct userType
@@ -102,6 +111,11 @@ export function useAuth() {
             console.error("Error updating user metadata:", updateError)
           } else {
             console.log("User metadata updated successfully")
+            // Refresh the session to get updated metadata
+            const { data: refreshData } = await supabase.auth.getSession()
+            if (refreshData.session) {
+              console.log("Session refreshed with updated metadata:", refreshData.session.user.user_metadata)
+            }
           }
         }
         
@@ -226,7 +240,7 @@ export function useAuth() {
     return { data }
   }
 
-  const verifyOTP = async (email: string, token: string) => {
+  const verifyOTP = async (email: string, token: string, selectedUserType?: 'member' | 'trainer') => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }))
     
     const { data, error } = await supabase.auth.verifyOtp({
@@ -261,12 +275,21 @@ export function useAuth() {
           .eq('user_id', data.user.id)
           .single()
         
-        // Determine user type based on which table they exist in
+        // Determine user type
         let userType = 'member'
-        if (trainerData) {
+        
+        if (memberData && trainerData) {
+          // User exists in both tables (shouldn't happen, but handle it)
+          userType = data.user.user_metadata?.userType || 'member'
+        } else if (trainerData) {
+          // User exists in trainers table
           userType = 'trainer'
         } else if (memberData) {
+          // User exists in members table
           userType = 'member'
+        } else {
+          // New user - use the selected user type
+          userType = selectedUserType || 'member'
         }
         
         // Update user metadata with the correct userType
@@ -280,6 +303,11 @@ export function useAuth() {
             console.error("Error updating user metadata:", updateError)
           } else {
             console.log("User metadata updated successfully")
+            // Refresh the session to get updated metadata
+            const { data: refreshData } = await supabase.auth.getSession()
+            if (refreshData.session) {
+              console.log("Session refreshed with updated metadata:", refreshData.session.user.user_metadata)
+            }
           }
         }
         

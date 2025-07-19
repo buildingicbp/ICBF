@@ -57,7 +57,7 @@ export default function SignUpPage() {
           }
         } else {
           // Password Sign In
-          const { error } = await signIn(formData.email, formData.password)
+          const { error } = await signIn(formData.email, formData.password, userType as 'member' | 'trainer')
           if (error) {
             // Provide better error messages for common scenarios
             let errorMessage = error.message

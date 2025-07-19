@@ -22,13 +22,20 @@ export default function DashboardPage() {
 
       if (!loading && user) {
         console.log("User found, checking user type")
+        
+        // Force refresh session to get latest metadata
+        const { data: sessionData } = await supabase.auth.getSession()
+        const currentUser = sessionData.session?.user || user
+        
+        console.log("Current user metadata:", currentUser.user_metadata)
+        
         // Redirect based on user type
-        const userType = user.user_metadata?.userType || 'member'
-        const userEmail = user.email?.toLowerCase()
+        const userType = currentUser.user_metadata?.userType || 'member'
+        const userEmail = currentUser.email?.toLowerCase()
         
         console.log("User type from metadata:", userType)
         console.log("User email:", userEmail)
-        console.log("Full user metadata:", user.user_metadata)
+        console.log("Full user metadata:", currentUser.user_metadata)
         
         // Check if user is admin (specific email)
         if (userEmail === 'gouravpanda2k04@gmail.com') {
@@ -38,14 +45,14 @@ export default function DashboardPage() {
         }
         
         // Try to determine user type from database if metadata is not set
-        if (!user.user_metadata?.userType) {
+        if (!currentUser.user_metadata?.userType) {
           console.log("No userType in metadata, checking database...")
           try {
             // Check if user exists in trainers table
             const { data: trainerData } = await supabase
               .from('trainers')
               .select('id')
-              .eq('user_id', user.id)
+              .eq('user_id', currentUser.id)
               .single()
             
             if (trainerData) {
@@ -58,7 +65,7 @@ export default function DashboardPage() {
             const { data: memberData } = await supabase
               .from('members')
               .select('id')
-              .eq('user_id', user.id)
+              .eq('user_id', currentUser.id)
               .single()
             
             if (memberData) {
@@ -82,7 +89,12 @@ export default function DashboardPage() {
       }
     }
 
-    handleRedirect()
+    // Add a small delay to ensure session is fully loaded
+    const timer = setTimeout(() => {
+      handleRedirect()
+    }, 500)
+
+    return () => clearTimeout(timer)
   }, [user, loading, router])
 
   // Show loading while determining redirect
