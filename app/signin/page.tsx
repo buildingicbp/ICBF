@@ -34,6 +34,11 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log("🚀 Form submitted!")
+    console.log("🎯 Current userType state:", userType)
+    console.log("📝 Form data:", formData)
+    console.log("🔐 Is sign in:", isSignIn)
+    
     if (!formData.email) {
       toast.error("Please enter your email address")
       return
@@ -91,6 +96,7 @@ export default function SignUpPage() {
         }
         
         console.log("📝 Sign-up data being passed:", signUpData)
+        console.log("🎯 userType in signUpData:", signUpData.userType)
         
         const { error } = await signUp(formData.email, formData.password, signUpData)
         if (error) {
@@ -232,23 +238,38 @@ export default function SignUpPage() {
           </div>
 
           {/* User Type Selection */}
-          <div className="flex bg-gray-100 rounded-full p-1">
-            <button
-              onClick={() => setUserType("member")}
-              className={`flex-1 py-2 px-6 rounded-full text-sm font-medium transition-colors ${
-                userType === "member" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Member
-            </button>
-            <button
-              onClick={() => setUserType("trainer")}
-              className={`flex-1 py-2 px-6 rounded-full text-sm font-medium transition-colors ${
-                userType === "trainer" ? "bg-black text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Trainer
-            </button>
+          <div className="space-y-2">
+            <div className="flex bg-gray-100 rounded-full p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("🔄 Setting userType to member")
+                  setUserType("member")
+                }}
+                className={`flex-1 py-2 px-6 rounded-full text-sm font-medium transition-colors ${
+                  userType === "member" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Member
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("🔄 Setting userType to trainer")
+                  setUserType("trainer")
+                }}
+                className={`flex-1 py-2 px-6 rounded-full text-sm font-medium transition-colors ${
+                  userType === "trainer" ? "bg-black text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Trainer
+              </button>
+            </div>
+            
+            {/* Debug indicator */}
+            <div className="text-xs text-center text-gray-500">
+              Current selection: <span className="font-bold">{userType}</span>
+            </div>
           </div>
 
           {/* Sign Up Form */}
