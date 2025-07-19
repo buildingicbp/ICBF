@@ -105,11 +105,16 @@ export default function SignUpPage() {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log("Starting Google sign-in with userType:", userType)
       const { error } = await signInWithGoogle(userType as 'member' | 'trainer')
       if (error) {
+        console.error("Google sign-in error:", error)
         toast.error(error.message)
+      } else {
+        console.log("Google sign-in initiated successfully")
       }
     } catch (err) {
+      console.error("Unexpected error in Google sign-in:", err)
       toast.error("An unexpected error occurred")
     }
   }

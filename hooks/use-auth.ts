@@ -18,7 +18,11 @@ export function useAuth() {
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      console.log("Getting initial session...")
+      const { data: { session }, error } = await supabase.auth.getSession()
+      console.log("Initial session data:", session)
+      console.log("Initial session error:", error)
+      
       setAuthState({
         user: session?.user ?? null,
         loading: false,
@@ -31,6 +35,9 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state change event:", event)
+        console.log("Auth state change session:", session)
+        
         setAuthState({
           user: session?.user ?? null,
           loading: false,
@@ -288,12 +295,16 @@ export function useAuth() {
   }
 
   const signInWithGoogle = async (userType?: 'member' | 'trainer') => {
+    console.log("Starting Google OAuth sign-in with userType:", userType)
     setAuthState(prev => ({ ...prev, loading: true, error: null }))
+    
+    const redirectUrl = `${window.location.origin}/auth/callback?userType=${userType || 'member'}`
+    console.log("Redirect URL:", redirectUrl)
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?userType=${userType || 'member'}`,
+        redirectTo: redirectUrl,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -301,7 +312,11 @@ export function useAuth() {
       },
     })
 
+    console.log("OAuth response data:", data)
+    console.log("OAuth response error:", error)
+
     if (error) {
+      console.error("Google OAuth error:", error)
       setAuthState(prev => ({
         ...prev,
         loading: false,
@@ -310,6 +325,7 @@ export function useAuth() {
       return { error }
     }
 
+    console.log("Google OAuth initiated successfully")
     return { data }
   }
 

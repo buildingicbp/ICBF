@@ -2,70 +2,182 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { User, Zap, Star, MessageCircle, Utensils, Dumbbell, Moon, Calendar, Lock, Sparkles, ArrowRight } from "lucide-react"
+import { User, Zap, Star, MessageCircle, Utensils, Dumbbell, Moon, Calendar, Lock, Sparkles, ArrowRight, Menu, X } from "lucide-react"
 import DietPlanModal from "@/components/diet-plan-modal"
 import { useScrollModal } from "@/hooks/use-scroll-modal"
 import DietPlanPopupModal from "@/components/diet-plan-popup-modal"
 import { useDietPlanPopup } from "@/hooks/use-diet-plan-popup"
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
 
 
 export default function LandingPage() {
   const { showModal, closeModal } = useScrollModal()
   const { showPopup, closePopup } = useDietPlanPopup()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  // Redirect authenticated users to their dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      const userType = user.user_metadata?.userType || 'member'
+      const userEmail = user.email?.toLowerCase()
+      
+      // Check if user is admin
+      if (userEmail === 'gouravpanda2k04@gmail.com') {
+        router.push("/admin-dashboard")
+        return
+      }
+      
+      // Redirect to role-specific dashboard
+      if (userType === 'trainer') {
+        router.push("/trainer-dashboard")
+      } else {
+        router.push("/member-dashboard")
+      }
+    }
+  }, [user, loading, router])
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render the landing page if user is authenticated
+  if (user) {
+    return null
+  }
 
   return (
     <div className="bg-white" style={{ transform: 'scale(0.9)', transformOrigin: 'top center', margin: '0', padding: '0', minHeight: '100vh' }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-4 bg-white/80 backdrop-blur-sm relative z-50">
         {/* Logo Container */}
-        <div className="flex items-center pl-32">
-          <Image src="/logo.png" alt="ICBF Logo" width={80} height={40} className="h-8 w-auto" />
+        <div className="flex items-center pl-4 sm:pl-8 lg:pl-32">
+          <Image src="/logo.png" alt="ICBF Logo" width={80} height={40} className="h-6 sm:h-8 w-auto" />
         </div>
 
-        {/* Center Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
+        {/* Center Navigation - Desktop */}
+        <nav className="hidden lg:flex items-center space-x-8">
+          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
             Learn
           </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
+          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
             Services
           </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
+          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
             Work with Us
           </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
+          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
             Store
           </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
+          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
             Contact
           </a>
         </nav>
 
-        {/* Action Buttons Container */}
-        <div className="flex items-center gap-4 pr-32">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
-            <MessageCircle className="w-4 h-4" />
-            Book a Free Consultation
+        {/* Action Buttons Container - Desktop */}
+        <div className="hidden md:flex items-center gap-2 lg:gap-4 pr-4 sm:pr-8 lg:pr-32">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2">
+            <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Book a Free Consultation</span>
+            <span className="sm:hidden">Consultation</span>
           </Button>
           <Link href="/signin">
-            <Button variant="outline" className="border-gray-300 text-[#1F509A] hover:bg-gray-50 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
-              Login As
-              <ArrowRight className="w-4 h-4" />
+            <Button variant="outline" className="border-gray-300 text-[#1F509A] hover:bg-gray-50 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2">
+              <span className="hidden sm:inline">Login As</span>
+              <span className="sm:hidden">Login</span>
+              <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </Link>
         </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          aria-label="Toggle mobile menu"
+        >
+          {isMobileMenuOpen ? (
+            <X className="w-6 h-6 text-gray-700" />
+          ) : (
+            <Menu className="w-6 h-6 text-gray-700" />
+          )}
+        </button>
       </header>
 
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-white/95 backdrop-blur-sm">
+          <div className="flex flex-col h-full">
+            {/* Mobile Menu Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <Image src="/logo.png" alt="ICBF Logo" width={80} height={40} className="h-8 w-auto" />
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-700" />
+              </button>
+            </div>
+
+            {/* Mobile Navigation */}
+            <nav className="flex-1 px-4 py-8">
+              <div className="space-y-6">
+                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                  Learn
+                </a>
+                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                  Services
+                </a>
+                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                  Work with Us
+                </a>
+                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                  Store
+                </a>
+                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                  Contact
+                </a>
+              </div>
+            </nav>
+
+            {/* Mobile Action Buttons */}
+            <div className="p-4 space-y-4 border-t border-gray-200">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-medium flex items-center justify-center gap-2">
+                <MessageCircle className="w-5 h-5" />
+                Book a Free Consultation
+              </Button>
+              <Link href="/signin" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full border-gray-300 text-[#1F509A] hover:bg-gray-50 py-3 rounded-full font-medium flex items-center justify-center gap-2">
+                  Login As
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-20">
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center">
           {/* Left Content */}
-          <div className="space-y-8">
-            <div className="space-y-6">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-[#1F509A] leading-tight">
+          <div className="space-y-6 sm:space-y-8 text-center lg:text-left">
+            <div className="space-y-4 sm:space-y-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-[#1F509A] leading-tight">
                 It's Time To Love
                 <br />
                 The Person In
@@ -74,11 +186,11 @@ export default function LandingPage() {
               </h1>
 
               <div className="space-y-4">
-                <p className="text-xl text-slate-700 leading-relaxed">
+                <p className="text-base sm:text-lg lg:text-xl text-slate-700 leading-relaxed">
                   We Don't Just Give Workouts. We Help You Build
-                  <br />
+                  <br className="hidden sm:block" />
                   Habits, Follow A Structured Path, And Stay
-                  <br />
+                  <br className="hidden sm:block" />
                   Consistent — <span className="text-[#1F509A] font-semibold">For Real Change</span>.
                 </p>
               </div>
@@ -86,45 +198,50 @@ export default function LandingPage() {
 
             {/* Action Buttons */}
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button className="bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-10 py-4 rounded-full text-lg font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200">
-                  <User className="w-6 h-6" />I Want To Get Fit
-                </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link href="/signin">
+                  <Button className="bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                    <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                    I Want To Get Fit
+                  </Button>
+                </Link>
 
                 <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    className="border-2 border-[#1F509A] text-[#1F509A] hover:bg-[#1F509A] hover:text-white px-10 py-4 rounded-full text-lg font-semibold flex items-center gap-2 bg-white shadow-md hover:shadow-lg transition-all duration-200"
-                  >
-                    <Zap className="w-6 h-6" />
-                    Connect With Trainer
-                  </Button>
-                  <p className="text-sm text-[#1F509A] text-center">(for personalized plans)</p>
+                  <Link href="/signin">
+                    <Button
+                      variant="outline"
+                      className="border-2 border-[#1F509A] text-[#1F509A] hover:bg-[#1F509A] hover:text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 bg-white shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+                      Connect With Trainer
+                    </Button>
+                  </Link>
+                  <p className="text-xs sm:text-sm text-[#1F509A] text-center">(for personalized plans)</p>
                 </div>
               </div>
             </div>
 
             {/* Trust Indicator */}
-            <div className="pt-4">
+            <div className="pt-4 flex justify-center lg:justify-start">
               <Image
                 src="/trust.png"
                 alt="Trusted by 30+ fitness coaches"
                 width={400}
                 height={60}
-                className="w-auto h-14"
+                className="w-auto h-10 sm:h-12 lg:h-14 max-w-full"
               />
             </div>
           </div>
 
           {/* Right Image */}
-          <div className="flex justify-center lg:justify-start">
-            <div className="relative">
+          <div className="flex justify-center lg:justify-start order-first lg:order-last">
+            <div className="relative w-full max-w-md sm:max-w-lg lg:max-w-2xl">
               <Image
                 src="/transformation.png"
                 alt="Before and after transformation"
                 width={600}
                 height={400}
-                className="shadow-2xl w-full max-w-2xl"
+                className="shadow-2xl w-full h-auto rounded-lg"
               />
             </div>
           </div>

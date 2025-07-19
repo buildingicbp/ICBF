@@ -10,12 +10,17 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log("Auth callback started")
+        
         // Get userType from URL parameters
         const urlParams = new URLSearchParams(window.location.search)
         const userType = urlParams.get('userType') || 'member'
+        console.log("User type from URL:", userType)
         
         // Handle the OAuth callback
         const { data, error } = await supabase.auth.getSession()
+        console.log("Session data:", data)
+        console.log("Session error:", error)
         
         if (error) {
           console.error("Auth callback error:", error)
@@ -25,21 +30,26 @@ export default function AuthCallbackPage() {
 
         if (data.session) {
           const user = data.session.user
+          console.log("User authenticated:", user.email)
           
           // Update user metadata with userType if it's a new user
           if (user && !user.user_metadata?.userType) {
+            console.log("Updating user metadata with userType:", userType)
             const { error: updateError } = await supabase.auth.updateUser({
               data: { userType: userType }
             })
             
             if (updateError) {
               console.error("Error updating user metadata:", updateError)
+            } else {
+              console.log("User metadata updated successfully")
             }
           }
           
           // Check if user has a profile in the database, create if not
           if (user) {
             try {
+              console.log("Checking for existing profile...")
               // Check if user exists in members table
               const { data: memberData } = await supabase
                 .from('members')
@@ -54,8 +64,12 @@ export default function AuthCallbackPage() {
                 .eq('user_id', user.id)
                 .single()
               
+              console.log("Member data:", memberData)
+              console.log("Trainer data:", trainerData)
+              
               // If user doesn't exist in either table, create profile
               if (!memberData && !trainerData) {
+                console.log("Creating new profile for user")
                 const profileData = {
                   user_id: user.id,
                   username: user.user_metadata?.full_name || user.email?.split('@')[0] || 'user',
@@ -71,6 +85,8 @@ export default function AuthCallbackPage() {
                   await createMemberProfile(profileData)
                   console.log('Created member profile for OAuth user')
                 }
+              } else {
+                console.log("User profile already exists")
               }
             } catch (profileError) {
               console.error('Error checking/creating profile:', profileError)
@@ -80,13 +96,19 @@ export default function AuthCallbackPage() {
           
           // Successfully authenticated, redirect to dashboard
           console.log("Auth successful, redirecting to dashboard")
-          router.push("/dashboard")
+          
+          // Add a small delay to ensure everything is processed
+          setTimeout(() => {
+            router.push("/dashboard")
+          }, 1000)
         } else {
+          console.log("No session found, checking URL hash...")
           // Try to get the session from the URL hash
           const hashParams = new URLSearchParams(window.location.hash.substring(1))
           const accessToken = hashParams.get('access_token')
           
           if (accessToken) {
+            console.log("Found access token in URL hash")
             // Set the session manually if we have an access token
             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
               access_token: accessToken,
@@ -101,6 +123,7 @@ export default function AuthCallbackPage() {
             
             if (sessionData.session) {
               const user = sessionData.session.user
+              console.log("Session set successfully for user:", user.email)
               
               // Update user metadata with userType if it's a new user
               if (user && !user.user_metadata?.userType) {
@@ -155,7 +178,9 @@ export default function AuthCallbackPage() {
               }
               
               console.log("Session set successfully, redirecting to dashboard")
-              router.push("/dashboard")
+              setTimeout(() => {
+                router.push("/dashboard")
+              }, 1000)
               return
             }
           }
@@ -178,6 +203,7 @@ export default function AuthCallbackPage() {
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
         <p className="mt-4 text-gray-600">Completing sign in...</p>
+        <p className="mt-2 text-sm text-gray-500">Please wait while we set up your account</p>
       </div>
     </div>
   )
