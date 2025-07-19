@@ -12,10 +12,10 @@ export default function AuthCallbackPage() {
       try {
         console.log("🔄 Auth callback started")
         
-        // Get userType from URL parameters
+        // Get userType from URL parameters - THIS IS THE PRIMARY SOURCE OF TRUTH
         const urlParams = new URLSearchParams(window.location.search)
         const urlUserType = urlParams.get('userType')
-        console.log("🎯 User type from URL:", urlUserType)
+        console.log("🎯 User type from URL (PRIMARY):", urlUserType)
         
         // Handle the OAuth callback
         const { data, error } = await supabase.auth.getSession()
@@ -33,11 +33,11 @@ export default function AuthCallbackPage() {
           console.log("✅ User authenticated:", user.email)
           console.log("📧 Current user metadata:", user.user_metadata)
           
-          // Determine userType - prioritize URL parameter, then metadata, then default to member
+          // PRIORITY ORDER: URL parameter > metadata > default to member
           let userType = urlUserType || user.user_metadata?.userType || 'member'
-          console.log("🎯 Final userType determined:", userType)
+          console.log("🎯 Final userType determined (URL priority):", userType)
           
-          // Always update user metadata with userType to ensure it's set correctly
+          // ALWAYS update user metadata with the determined userType
           console.log("🔄 Updating user metadata with userType:", userType)
           const { error: updateError } = await supabase.auth.updateUser({
             data: { userType: userType }
@@ -78,39 +78,10 @@ export default function AuthCallbackPage() {
               console.log("📊 Member data:", memberData)
               console.log("📊 Trainer data:", trainerData)
               
-              // Determine user type - prioritize database over metadata
-              let finalUserType = userType
-              
-              if (trainerData) {
-                // User exists in trainers table
-                finalUserType = 'trainer'
-                console.log("🎯 User found in trainers table, setting finalUserType to trainer")
-              } else if (memberData) {
-                // User exists in members table
-                finalUserType = 'member'
-                console.log("🎯 User found in members table, setting finalUserType to member")
-              } else {
-                console.log("🎯 User not found in database, using determined userType:", userType)
-              }
-              
-              // Update user metadata with the final userType if it changed
-              if (finalUserType !== userType) {
-                console.log("🔄 Updating user metadata with final userType:", finalUserType)
-                const { error: finalUpdateError } = await supabase.auth.updateUser({
-                  data: { userType: finalUserType }
-                })
-                
-                if (finalUpdateError) {
-                  console.error("❌ Error updating user metadata with final userType:", finalUpdateError)
-                } else {
-                  console.log("✅ User metadata updated with final userType successfully")
-                }
-              }
-              
-              // If user doesn't exist in either table, create profile
+              // If user doesn't exist in either table, create profile based on URL userType
               if (!memberData && !trainerData) {
                 console.log("🆕 Creating new profile for user")
-                console.log("🎯 Creating profile for userType:", finalUserType)
+                console.log("🎯 Creating profile for userType (from URL):", userType)
                 
                 const profileData = {
                   user_id: updatedUser.id,
@@ -122,11 +93,41 @@ export default function AuthCallbackPage() {
                 
                 console.log("📝 Profile data to create:", profileData)
                 
-                if (finalUserType === 'trainer') {
+                if (userType === 'trainer') {
                   console.log("🏋️ Creating trainer profile...")
                   const result = await createTrainerProfile(profileData)
                   if (result.error) {
                     console.error("❌ Failed to create trainer profile:", result.error)
+                    // Try direct insertion as fallback
+                    console.log("🔄 Trying direct trainer insertion...")
+                    const { data: directData, error: directError } = await supabaseService
+                      .from('trainers')
+                      .insert({
+                        user_id: profileData.user_id,
+                        username: profileData.username,
+                        email: profileData.email,
+                        contact: profileData.contact,
+                        full_name: profileData.full_name,
+                        join_date: new Date().toISOString(),
+                        specialization: [],
+                        hourly_rate: 50,
+                        experience_years: 0,
+                        rating: 0,
+                        total_reviews: 0,
+                        total_clients: 0,
+                        active_clients: 0,
+                        total_sessions: 0,
+                        is_verified: false,
+                        is_available: true,
+                      })
+                      .select()
+                      .single()
+                    
+                    if (directError) {
+                      console.error("❌ Direct trainer insertion also failed:", directError)
+                    } else {
+                      console.log("✅ Direct trainer insertion succeeded:", directData)
+                    }
                   } else {
                     console.log('✅ Created trainer profile for OAuth user:', result.data)
                   }
@@ -135,6 +136,30 @@ export default function AuthCallbackPage() {
                   const result = await createMemberProfile(profileData)
                   if (result.error) {
                     console.error("❌ Failed to create member profile:", result.error)
+                    // Try direct insertion as fallback
+                    console.log("🔄 Trying direct member insertion...")
+                    const { data: directData, error: directError } = await supabaseService
+                      .from('members')
+                      .insert({
+                        user_id: profileData.user_id,
+                        username: profileData.username,
+                        email: profileData.email,
+                        contact: profileData.contact,
+                        full_name: profileData.full_name,
+                        join_date: new Date().toISOString(),
+                        total_workouts: 0,
+                        current_streak: 0,
+                        longest_streak: 0,
+                        total_calories_burned: 0,
+                      })
+                      .select()
+                      .single()
+                    
+                    if (directError) {
+                      console.error("❌ Direct member insertion also failed:", directError)
+                    } else {
+                      console.log("✅ Direct member insertion succeeded:", directData)
+                    }
                   } else {
                     console.log('✅ Created member profile for OAuth user:', result.data)
                   }
@@ -179,11 +204,11 @@ export default function AuthCallbackPage() {
               const user = sessionData.session.user
               console.log("✅ Session set successfully for user:", user.email)
               
-              // Determine userType for hash flow
+              // Use URL userType as primary source of truth
               let hashUserType = urlUserType || user.user_metadata?.userType || 'member'
-              console.log("🎯 UserType for hash flow:", hashUserType)
+              console.log("🎯 UserType for hash flow (URL priority):", hashUserType)
               
-              // Update user metadata with userType if it's a new user or different
+              // Update user metadata with userType
               if (user && (!user.user_metadata?.userType || user.user_metadata?.userType !== hashUserType)) {
                 console.log("🔄 Updating user metadata with userType:", hashUserType)
                 const { error: updateError } = await supabase.auth.updateUser({
@@ -218,36 +243,7 @@ export default function AuthCallbackPage() {
                   console.log("📊 Member data (hash flow):", memberData)
                   console.log("📊 Trainer data (hash flow):", trainerData)
                   
-                  // Determine user type - prioritize database over metadata
-                  let finalUserType = hashUserType
-                  
-                  if (trainerData) {
-                    // User exists in trainers table
-                    finalUserType = 'trainer'
-                    console.log("🎯 User found in trainers table (hash flow), setting finalUserType to trainer")
-                  } else if (memberData) {
-                    // User exists in members table
-                    finalUserType = 'member'
-                    console.log("🎯 User found in members table (hash flow), setting finalUserType to member")
-                  } else {
-                    console.log("🎯 User not found in database (hash flow), using hashUserType:", hashUserType)
-                  }
-                  
-                  // Update user metadata with the final userType if it changed
-                  if (finalUserType !== hashUserType) {
-                    console.log("🔄 Updating user metadata with final userType (hash flow):", finalUserType)
-                    const { error: finalUpdateError } = await supabase.auth.updateUser({
-                      data: { userType: finalUserType }
-                    })
-                    
-                    if (finalUpdateError) {
-                      console.error("❌ Error updating user metadata with final userType (hash flow):", finalUpdateError)
-                    } else {
-                      console.log("✅ User metadata updated with final userType successfully (hash flow)")
-                    }
-                  }
-                  
-                  // If user doesn't exist in either table, create profile
+                  // If user doesn't exist in either table, create profile based on URL userType
                   if (!memberData && !trainerData) {
                     console.log("🆕 Creating new profile for user (hash flow)")
                     const profileData = {
@@ -260,11 +256,41 @@ export default function AuthCallbackPage() {
                     
                     console.log("📝 Profile data to create (hash flow):", profileData)
                     
-                    if (finalUserType === 'trainer') {
+                    if (hashUserType === 'trainer') {
                       console.log("🏋️ Creating trainer profile (hash flow)...")
                       const result = await createTrainerProfile(profileData)
                       if (result.error) {
                         console.error("❌ Failed to create trainer profile (hash flow):", result.error)
+                        // Try direct insertion as fallback
+                        console.log("🔄 Trying direct trainer insertion (hash flow)...")
+                        const { data: directData, error: directError } = await supabaseService
+                          .from('trainers')
+                          .insert({
+                            user_id: profileData.user_id,
+                            username: profileData.username,
+                            email: profileData.email,
+                            contact: profileData.contact,
+                            full_name: profileData.full_name,
+                            join_date: new Date().toISOString(),
+                            specialization: [],
+                            hourly_rate: 50,
+                            experience_years: 0,
+                            rating: 0,
+                            total_reviews: 0,
+                            total_clients: 0,
+                            active_clients: 0,
+                            total_sessions: 0,
+                            is_verified: false,
+                            is_available: true,
+                          })
+                          .select()
+                          .single()
+                        
+                        if (directError) {
+                          console.error("❌ Direct trainer insertion also failed (hash flow):", directError)
+                        } else {
+                          console.log("✅ Direct trainer insertion succeeded (hash flow):", directData)
+                        }
                       } else {
                         console.log('✅ Created trainer profile for OAuth user (hash flow):', result.data)
                       }
@@ -273,6 +299,30 @@ export default function AuthCallbackPage() {
                       const result = await createMemberProfile(profileData)
                       if (result.error) {
                         console.error("❌ Failed to create member profile (hash flow):", result.error)
+                        // Try direct insertion as fallback
+                        console.log("🔄 Trying direct member insertion (hash flow)...")
+                        const { data: directData, error: directError } = await supabaseService
+                          .from('members')
+                          .insert({
+                            user_id: profileData.user_id,
+                            username: profileData.username,
+                            email: profileData.email,
+                            contact: profileData.contact,
+                            full_name: profileData.full_name,
+                            join_date: new Date().toISOString(),
+                            total_workouts: 0,
+                            current_streak: 0,
+                            longest_streak: 0,
+                            total_calories_burned: 0,
+                          })
+                          .select()
+                          .single()
+                        
+                        if (directError) {
+                          console.error("❌ Direct member insertion also failed (hash flow):", directError)
+                        } else {
+                          console.log("✅ Direct member insertion succeeded (hash flow):", directData)
+                        }
                       } else {
                         console.log('✅ Created member profile for OAuth user (hash flow):', result.data)
                       }
