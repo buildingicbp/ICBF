@@ -13,7 +13,7 @@ import DietPlanPopupModal from "@/components/diet-plan-popup-modal"
 import { useDietPlanPopup } from "@/hooks/use-diet-plan-popup"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { supabase, supabaseService } from "@/lib/supabase"
 
 
 export default function LandingPage() {
@@ -51,7 +51,7 @@ export default function LandingPage() {
           console.log("No userType in metadata, checking database...")
           try {
             // Check if user exists in trainers table
-            const { data: trainerData } = await supabase
+            const { data: trainerData } = await supabaseService
               .from('trainers')
               .select('id')
               .eq('user_id', currentUser.id)
@@ -64,7 +64,7 @@ export default function LandingPage() {
             }
             
             // Check if user exists in members table
-            const { data: memberData } = await supabase
+            const { data: memberData } = await supabaseService
               .from('members')
               .select('id')
               .eq('user_id', currentUser.id)

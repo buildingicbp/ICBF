@@ -2,8 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Service client for admin operations (bypasses RLS)
+export const supabaseService = createClient(supabaseUrl, supabaseServiceKey)
 
 // Database table types
 export interface Member {
@@ -68,7 +72,9 @@ export const createMemberProfile = async (userData: {
   contact: string
   full_name?: string
 }) => {
-  const { data, error } = await supabase
+  console.log("Creating member profile with data:", userData)
+  
+  const { data, error } = await supabaseService
     .from('members')
     .insert({
       user_id: userData.user_id,
@@ -85,6 +91,12 @@ export const createMemberProfile = async (userData: {
     .select()
     .single()
 
+  if (error) {
+    console.error("Error creating member profile:", error)
+  } else {
+    console.log("Member profile created successfully:", data)
+  }
+
   return { data, error }
 }
 
@@ -97,7 +109,9 @@ export const createTrainerProfile = async (userData: {
   specialization?: string[]
   hourly_rate?: number
 }) => {
-  const { data, error } = await supabase
+  console.log("Creating trainer profile with data:", userData)
+  
+  const { data, error } = await supabaseService
     .from('trainers')
     .insert({
       user_id: userData.user_id,
@@ -120,11 +134,17 @@ export const createTrainerProfile = async (userData: {
     .select()
     .single()
 
+  if (error) {
+    console.error("Error creating trainer profile:", error)
+  } else {
+    console.log("Trainer profile created successfully:", data)
+  }
+
   return { data, error }
 }
 
 export const getMemberProfile = async (userId: string) => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseService
     .from('members')
     .select('*')
     .eq('user_id', userId)
@@ -134,7 +154,7 @@ export const getMemberProfile = async (userId: string) => {
 }
 
 export const getTrainerProfile = async (userId: string) => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseService
     .from('trainers')
     .select('*')
     .eq('user_id', userId)

@@ -3,7 +3,7 @@
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { supabase } from "@/lib/supabase"
+import { supabase, supabaseService } from "@/lib/supabase"
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
@@ -49,7 +49,7 @@ export default function DashboardPage() {
           console.log("No userType in metadata, checking database...")
           try {
             // Check if user exists in trainers table
-            const { data: trainerData } = await supabase
+            const { data: trainerData } = await supabaseService
               .from('trainers')
               .select('id')
               .eq('user_id', currentUser.id)
@@ -62,7 +62,7 @@ export default function DashboardPage() {
             }
             
             // Check if user exists in members table
-            const { data: memberData } = await supabase
+            const { data: memberData } = await supabaseService
               .from('members')
               .select('id')
               .eq('user_id', currentUser.id)

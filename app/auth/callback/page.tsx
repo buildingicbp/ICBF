@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { supabase, createMemberProfile, createTrainerProfile } from "@/lib/supabase"
+import { supabase, createMemberProfile, createTrainerProfile, supabaseService } from "@/lib/supabase"
 
 export default function AuthCallbackPage() {
   const router = useRouter()
@@ -58,14 +58,14 @@ export default function AuthCallbackPage() {
             try {
               console.log("Checking for existing profile...")
               // Check if user exists in members table
-              const { data: memberData } = await supabase
+              const { data: memberData } = await supabaseService
                 .from('members')
                 .select('id')
                 .eq('user_id', updatedUser.id)
                 .single()
               
               // Check if user exists in trainers table
-              const { data: trainerData } = await supabase
+              const { data: trainerData } = await supabaseService
                 .from('trainers')
                 .select('id')
                 .eq('user_id', updatedUser.id)
@@ -77,6 +77,8 @@ export default function AuthCallbackPage() {
               // If user doesn't exist in either table, create profile
               if (!memberData && !trainerData) {
                 console.log("Creating new profile for user")
+                console.log("Creating profile for userType:", userType)
+                
                 const profileData = {
                   user_id: updatedUser.id,
                   username: updatedUser.user_metadata?.full_name || updatedUser.email?.split('@')[0] || 'user',
@@ -85,12 +87,24 @@ export default function AuthCallbackPage() {
                   full_name: updatedUser.user_metadata?.full_name || updatedUser.user_metadata?.name || updatedUser.email?.split('@')[0] || 'User',
                 }
                 
+                console.log("Profile data to create:", profileData)
+                
                 if (userType === 'trainer') {
-                  await createTrainerProfile(profileData)
-                  console.log('Created trainer profile for OAuth user')
+                  console.log("Creating trainer profile...")
+                  const result = await createTrainerProfile(profileData)
+                  if (result.error) {
+                    console.error("Failed to create trainer profile:", result.error)
+                  } else {
+                    console.log('Created trainer profile for OAuth user:', result.data)
+                  }
                 } else {
-                  await createMemberProfile(profileData)
-                  console.log('Created member profile for OAuth user')
+                  console.log("Creating member profile...")
+                  const result = await createMemberProfile(profileData)
+                  if (result.error) {
+                    console.error("Failed to create member profile:", result.error)
+                  } else {
+                    console.log('Created member profile for OAuth user:', result.data)
+                  }
                 }
               } else {
                 console.log("User profile already exists")
@@ -147,14 +161,14 @@ export default function AuthCallbackPage() {
               if (user) {
                 try {
                   // Check if user exists in members table
-                  const { data: memberData } = await supabase
+                  const { data: memberData } = await supabaseService
                     .from('members')
                     .select('id')
                     .eq('user_id', user.id)
                     .single()
                   
                   // Check if user exists in trainers table
-                  const { data: trainerData } = await supabase
+                  const { data: trainerData } = await supabaseService
                     .from('trainers')
                     .select('id')
                     .eq('user_id', user.id)

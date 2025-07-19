@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, createMemberProfile, createTrainerProfile } from '@/lib/supabase'
+import { supabase, createMemberProfile, createTrainerProfile, supabaseService } from '@/lib/supabase'
 import { User, AuthError } from '@supabase/supabase-js'
 
 interface AuthState {
@@ -70,14 +70,14 @@ export function useAuth() {
     if (data.user) {
       try {
         // Check if user exists in members table
-        const { data: memberData } = await supabase
+        const { data: memberData } = await supabaseService
           .from('members')
           .select('id')
           .eq('user_id', data.user.id)
           .single()
         
         // Check if user exists in trainers table
-        const { data: trainerData } = await supabase
+        const { data: trainerData } = await supabaseService
           .from('trainers')
           .select('id')
           .eq('user_id', data.user.id)
@@ -121,6 +121,9 @@ export function useAuth() {
         
         // If user doesn't exist in either table, create profile based on userType
         if (!memberData && !trainerData) {
+          console.log("User doesn't exist in any table, creating new profile")
+          console.log("Creating profile for userType:", userType)
+          
           const profileData = {
             user_id: data.user.id,
             username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'user',
@@ -129,13 +132,27 @@ export function useAuth() {
             full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'User',
           }
           
+          console.log("Profile data to create:", profileData)
+          
           if (userType === 'trainer') {
-            await createTrainerProfile(profileData)
-            console.log('Created trainer profile for sign-in user')
+            console.log("Creating trainer profile...")
+            const result = await createTrainerProfile(profileData)
+            if (result.error) {
+              console.error("Failed to create trainer profile:", result.error)
+            } else {
+              console.log('Created trainer profile for sign-in user:', result.data)
+            }
           } else {
-            await createMemberProfile(profileData)
-            console.log('Created member profile for sign-in user')
+            console.log("Creating member profile...")
+            const result = await createMemberProfile(profileData)
+            if (result.error) {
+              console.error("Failed to create member profile:", result.error)
+            } else {
+              console.log('Created member profile for sign-in user:', result.data)
+            }
           }
+        } else {
+          console.log("User already has a profile in database")
         }
       } catch (profileError) {
         console.error('Error checking/creating profile:', profileError)
@@ -262,14 +279,14 @@ export function useAuth() {
     if (data.user) {
       try {
         // Check if user exists in members table
-        const { data: memberData } = await supabase
+        const { data: memberData } = await supabaseService
           .from('members')
           .select('id')
           .eq('user_id', data.user.id)
           .single()
         
         // Check if user exists in trainers table
-        const { data: trainerData } = await supabase
+        const { data: trainerData } = await supabaseService
           .from('trainers')
           .select('id')
           .eq('user_id', data.user.id)
@@ -313,6 +330,9 @@ export function useAuth() {
         
         // If user doesn't exist in either table, create profile based on userType
         if (!memberData && !trainerData) {
+          console.log("User doesn't exist in any table, creating new profile")
+          console.log("Creating profile for userType:", userType)
+          
           const profileData = {
             user_id: data.user.id,
             username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'user',
@@ -321,13 +341,27 @@ export function useAuth() {
             full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'User',
           }
           
+          console.log("Profile data to create:", profileData)
+          
           if (userType === 'trainer') {
-            await createTrainerProfile(profileData)
-            console.log('Created trainer profile for OTP user')
+            console.log("Creating trainer profile...")
+            const result = await createTrainerProfile(profileData)
+            if (result.error) {
+              console.error("Failed to create trainer profile:", result.error)
+            } else {
+              console.log('Created trainer profile for OTP user:', result.data)
+            }
           } else {
-            await createMemberProfile(profileData)
-            console.log('Created member profile for OTP user')
+            console.log("Creating member profile...")
+            const result = await createMemberProfile(profileData)
+            if (result.error) {
+              console.error("Failed to create member profile:", result.error)
+            } else {
+              console.log('Created member profile for OTP user:', result.data)
+            }
           }
+        } else {
+          console.log("User already has a profile in database")
         }
       } catch (profileError) {
         console.error('Error checking/creating profile:', profileError)
