@@ -46,72 +46,106 @@ export default function DebugPage() {
       addLog(`❌ Connection error: ${err}`)
     }
     
-    // Test 3: RLS Policy Test
-    addLog("3. Testing RLS policies...")
+    // Test 3: Check current session first
+    addLog("3. Checking current session...")
+    const {data: sessionData} = await supabase.auth.getSession()
+    if (!sessionData.session) {
+      addLog("❌ No active session - please log in first")
+      setLoading(false)
+      return
+    }
+    
+    const currentUser = sessionData.session.user
+    addLog(`✅ User logged in: ${currentUser.email}`)
+    addLog(`User ID: ${currentUser.id}`)
+    addLog(`User metadata: ${JSON.stringify(currentUser.user_metadata)}`)
+    
+    // Test 4: Check if user already has a profile
+    addLog("4. Checking existing profiles...")
     try {
-      // Generate a proper UUID
-      const testUserId = crypto.randomUUID()
-      const testData = {
-        user_id: testUserId,
-        username: 'testuser',
-        email: 'test@example.com',
-        contact: '+1234567890',
-        full_name: 'Test User'
-      }
+      const {data: memberData} = await supabase.from('members').select('id').eq('user_id', currentUser.id).single()
+      const {data: trainerData} = await supabase.from('trainers').select('id').eq('user_id', currentUser.id).single()
       
-      const {data: insertData, error: insertError} = await supabase.from('members').insert(testData).select()
-      
-      if (insertError) {
-        addLog(`❌ Insert failed: ${insertError.message}`)
-        addLog(`Error details: ${JSON.stringify(insertError)}`)
+      if (memberData) {
+        addLog("✅ User has member profile")
+      } else if (trainerData) {
+        addLog("✅ User has trainer profile")
       } else {
-        addLog("✅ Insert successful")
-        addLog(`Inserted data: ${JSON.stringify(insertData)}`)
+        addLog("ℹ️ User has no profile yet")
+      }
+    } catch (err) {
+      addLog("ℹ️ User has no profile yet")
+    }
+    
+    // Test 5: RLS Policy Test (only if user has no profile)
+    addLog("5. Testing RLS policies...")
+    try {
+      // Check if user already has a profile
+      const {data: existingMember} = await supabase.from('members').select('id').eq('user_id', currentUser.id).single()
+      const {data: existingTrainer} = await supabase.from('trainers').select('id').eq('user_id', currentUser.id).single()
+      
+      if (existingMember || existingTrainer) {
+        addLog("ℹ️ User already has profile, skipping insert test")
+      } else {
+        // Test creating a member profile
+        const testData = {
+          user_id: currentUser.id,
+          username: currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'user',
+          email: currentUser.email || '',
+          contact: currentUser.user_metadata?.phone || '',
+          full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User'
+        }
         
-        // Clean up
-        await supabase.from('members').delete().eq('user_id', testUserId)
-        addLog("🧹 Test data cleaned up")
+        const {data: insertData, error: insertError} = await supabase.from('members').insert(testData).select()
+        
+        if (insertError) {
+          addLog(`❌ Insert failed: ${insertError.message}`)
+          addLog(`Error details: ${JSON.stringify(insertError)}`)
+        } else {
+          addLog("✅ Insert successful")
+          addLog(`Inserted data: ${JSON.stringify(insertData)}`)
+          
+          // Clean up
+          await supabase.from('members').delete().eq('user_id', currentUser.id)
+          addLog("🧹 Test data cleaned up")
+        }
       }
     } catch (err) {
       addLog(`❌ Insert error: ${err}`)
     }
     
-    // Test 4: Profile creation functions
-    addLog("4. Testing profile creation functions...")
+    // Test 6: Profile creation functions
+    addLog("6. Testing profile creation functions...")
     try {
-      // Generate a proper UUID
-      const testMemberUserId = crypto.randomUUID()
-      const testMemberData = {
-        user_id: testMemberUserId,
-        username: 'testmember',
-        email: 'testmember@example.com',
-        contact: '+1234567890',
-        full_name: 'Test Member'
-      }
+      // Check if user already has a profile
+      const {data: existingMember} = await supabase.from('members').select('id').eq('user_id', currentUser.id).single()
+      const {data: existingTrainer} = await supabase.from('trainers').select('id').eq('user_id', currentUser.id).single()
       
-      const memberResult = await createMemberProfile(testMemberData)
-      if (memberResult.error) {
-        addLog(`❌ Member profile creation failed: ${memberResult.error.message}`)
+      if (existingMember || existingTrainer) {
+        addLog("ℹ️ User already has profile, skipping creation test")
       } else {
-        addLog("✅ Member profile creation successful")
-        addLog(`Member data: ${JSON.stringify(memberResult.data)}`)
+        const testMemberData = {
+          user_id: currentUser.id,
+          username: currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'user',
+          email: currentUser.email || '',
+          contact: currentUser.user_metadata?.phone || '',
+          full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User'
+        }
         
-        // Clean up
-        await supabase.from('members').delete().eq('user_id', testMemberUserId)
-        addLog("🧹 Member test data cleaned up")
+        const memberResult = await createMemberProfile(testMemberData)
+        if (memberResult.error) {
+          addLog(`❌ Member profile creation failed: ${memberResult.error.message}`)
+        } else {
+          addLog("✅ Member profile creation successful")
+          addLog(`Member data: ${JSON.stringify(memberResult.data)}`)
+          
+          // Clean up
+          await supabase.from('members').delete().eq('user_id', currentUser.id)
+          addLog("🧹 Member test data cleaned up")
+        }
       }
     } catch (err) {
       addLog(`❌ Member profile creation error: ${err}`)
-    }
-    
-    // Test 5: Check current session
-    addLog("5. Checking current session...")
-    const {data: sessionData} = await supabase.auth.getSession()
-    if (sessionData.session) {
-      addLog(`✅ User logged in: ${sessionData.session.user.email}`)
-      addLog(`User metadata: ${JSON.stringify(sessionData.session.user.user_metadata)}`)
-    } else {
-      addLog("ℹ️ No active session")
     }
     
     addLog("✅ Debug tests completed")
