@@ -1,13 +1,12 @@
-"use client"
+'use client'
 
-import { useEffect, useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
-function AuthCallbackContent() {
+export default function AuthCallback() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [isProcessing, setIsProcessing] = useState(true)
 
   useEffect(() => {
@@ -15,8 +14,9 @@ function AuthCallbackContent() {
       try {
         console.log("🔄 ===== AUTH CALLBACK START =====")
         
-        // Get userType from URL parameter FIRST
-        const userTypeFromUrl = searchParams.get('userType')
+        // Get userType from URL parameter using direct parsing
+        const urlParams = new URLSearchParams(window.location.search)
+        const userTypeFromUrl = urlParams.get('userType')
         console.log("🎯 userType from URL parameter:", userTypeFromUrl)
         console.log("🔗 Full URL:", window.location.href)
         console.log("🔗 URL search params:", window.location.search)
@@ -91,7 +91,7 @@ function AuthCallbackContent() {
     }
 
     handleAuthCallback()
-  }, [router, searchParams])
+  }, [router])
 
   const createUserProfile = async (userId: string, userType: string) => {
     console.log("🔄 Creating profile for user:", userId, "with type:", userType)
@@ -161,19 +161,4 @@ function AuthCallbackContent() {
   }
 
   return null
-}
-
-export default function AuthCallback() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    }>
-      <AuthCallbackContent />
-    </Suspense>
-  )
 } 
