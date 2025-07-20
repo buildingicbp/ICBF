@@ -39,7 +39,7 @@ export function DashboardSidebar({ userType, activePage = 'dashboard' }: Dashboa
 
   const handleSignOut = async () => {
     await signOut()
-    router.push("/")
+    // No need for manual redirect - signOut function handles it
   }
 
   const memberNavItems = [

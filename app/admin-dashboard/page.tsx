@@ -213,7 +213,7 @@ export default function AdminDashboardPage() {
 
   const handleSignOut = async () => {
     await signOut()
-    router.push("/")
+    // No need for manual redirect - signOut function handles it
   }
 
   const getStats = () => {
