@@ -607,12 +607,22 @@ export function useAuth() {
   }
 
   const signInWithGoogle = async (userType?: 'member' | 'trainer') => {
-    console.log("Starting Google OAuth sign-in with userType:", userType)
+    console.log("🔐 ===== SIGNINWITHGOOGLE FUNCTION START =====")
+    console.log("📥 Received userType parameter:", userType)
+    console.log("📥 userType type:", typeof userType)
+    console.log("📥 userType value:", userType)
+    console.log("🎯 Starting Google OAuth sign-in with userType:", userType)
     setAuthState(prev => ({ ...prev, loading: true, error: null }))
     
-    const redirectUrl = `${window.location.origin}/auth/callback?userType=${userType || 'member'}`
-    console.log("Redirect URL:", redirectUrl)
+    const finalUserType = userType || 'member'
+    console.log("🎯 Final userType for redirect:", finalUserType)
     
+    const redirectUrl = `${window.location.origin}/auth/callback?userType=${finalUserType}`
+    console.log("🔗 Redirect URL:", redirectUrl)
+    console.log("🔗 URL contains userType:", redirectUrl.includes('userType='))
+    console.log("🔗 URL userType value:", redirectUrl.split('userType=')[1])
+    
+    console.log("🔐 ===== CALLING SUPABASE OAUTH =====")
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -624,11 +634,13 @@ export function useAuth() {
       },
     })
 
-    console.log("OAuth response data:", data)
-    console.log("OAuth response error:", error)
+    console.log("🔐 ===== SUPABASE OAUTH RESPONSE =====")
+    console.log("📊 OAuth response data:", data)
+    console.log("❌ OAuth response error:", error)
+    console.log("🎯 OAuth redirect URL used:", redirectUrl)
 
     if (error) {
-      console.error("Google OAuth error:", error)
+      console.error("❌ Google OAuth error:", error)
       setAuthState(prev => ({
         ...prev,
         loading: false,
@@ -637,7 +649,9 @@ export function useAuth() {
       return { error }
     }
 
-    console.log("Google OAuth initiated successfully")
+    console.log("✅ Google OAuth initiated successfully")
+    console.log("✅ CONFIRMED: OAuth will redirect to:", redirectUrl)
+    console.log("🔐 ===== SIGNINWITHGOOGLE FUNCTION END =====")
     return { data }
   }
 
