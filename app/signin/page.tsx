@@ -38,6 +38,7 @@ export default function SignUpPage() {
     console.log("🎯 Current userType state:", userType)
     console.log("📝 Form data:", formData)
     console.log("🔐 Is sign in:", isSignIn)
+    console.log("🎯 Toggle selection confirmed:", userType)
     
     if (!formData.email) {
       toast.error("Please enter your email address")
@@ -87,6 +88,7 @@ export default function SignUpPage() {
         console.log("📝 Starting sign-up process...")
         console.log("📝 UserType selected:", userType)
         console.log("📝 Form data:", formData)
+        console.log("🎯 CONFIRMING: Toggle selection is:", userType)
         
         const signUpData = {
           username: formData.username,
@@ -97,6 +99,7 @@ export default function SignUpPage() {
         
         console.log("📝 Sign-up data being passed:", signUpData)
         console.log("🎯 userType in signUpData:", signUpData.userType)
+        console.log("✅ CONFIRMED: userType will be passed as:", signUpData.userType)
         
         const { error } = await signUp(formData.email, formData.password, signUpData)
         if (error) {
@@ -124,12 +127,14 @@ export default function SignUpPage() {
   const handleGoogleSignIn = async () => {
     try {
       console.log("🔐 Starting Google sign-in with userType:", userType)
+      console.log("🎯 CONFIRMING: Google OAuth will use userType:", userType)
       const { error } = await signInWithGoogle(userType as 'member' | 'trainer')
       if (error) {
         console.error("❌ Google sign-in error:", error)
         toast.error(error.message)
       } else {
         console.log("✅ Google sign-in initiated successfully")
+        console.log("✅ CONFIRMED: Google OAuth initiated with userType:", userType)
       }
     } catch (err) {
       console.error("💥 Unexpected error in Google sign-in:", err)

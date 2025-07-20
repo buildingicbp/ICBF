@@ -230,9 +230,11 @@ export function useAuth() {
     
     console.log("📝 SignUp called with userType:", userData?.userType)
     console.log("📝 Full userData:", userData)
+    console.log("✅ CONFIRMED: SignUp received userType:", userData?.userType)
     
     const userType = userData?.userType || 'member'
     console.log("🎯 Final userType for signup:", userType)
+    console.log("✅ CONFIRMED: SignUp will use userType:", userType)
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -258,12 +260,14 @@ export function useAuth() {
 
     console.log("✅ SignUp successful, user data:", data.user)
     console.log("📧 User metadata after signup:", data.user?.user_metadata)
+    console.log("✅ CONFIRMED: Email redirect URL includes userType:", userType)
 
     // Create profile in appropriate table based on user type
     if (data.user && userData) {
       try {
         console.log("🆕 Creating profile for user:", data.user.id)
         console.log("🎯 UserType for profile creation:", userType)
+        console.log("✅ CONFIRMED: Profile will be created as:", userType)
         
         const profileData = {
           user_id: data.user.id,
@@ -277,6 +281,7 @@ export function useAuth() {
 
         if (userType === 'trainer') {
           console.log("🏋️ Creating trainer profile...")
+          console.log("✅ CONFIRMED: Creating TRAINER profile as selected")
           const result = await createTrainerProfile(profileData)
           if (result.error) {
             console.error("❌ Failed to create trainer profile:", result.error)
@@ -290,17 +295,23 @@ export function useAuth() {
                 email: profileData.email,
                 contact: profileData.contact,
                 full_name: profileData.full_name,
-                join_date: new Date().toISOString(),
+                date_of_birth: null,
+                gender: null,
                 specialization: [],
-                hourly_rate: 50,
+                certifications: [],
                 experience_years: 0,
+                bio: null,
+                hourly_rate: 50,
                 rating: 0,
                 total_reviews: 0,
                 total_clients: 0,
                 active_clients: 0,
                 total_sessions: 0,
+                join_date: new Date().toISOString(),
                 is_verified: false,
                 is_available: true,
+                working_hours: null,
+                location: null,
               })
               .select()
               .single()
@@ -315,6 +326,7 @@ export function useAuth() {
           }
         } else {
           console.log("👤 Creating member profile...")
+          console.log("✅ CONFIRMED: Creating MEMBER profile as selected")
           const result = await createMemberProfile(profileData)
           if (result.error) {
             console.error("❌ Failed to create member profile:", result.error)
@@ -328,7 +340,17 @@ export function useAuth() {
                 email: profileData.email,
                 contact: profileData.contact,
                 full_name: profileData.full_name,
+                date_of_birth: null,
+                gender: null,
+                height: null,
+                weight: null,
+                fitness_goals: null,
+                experience_level: null,
+                medical_conditions: null,
+                emergency_contact: null,
+                membership_type: 'basic',
                 join_date: new Date().toISOString(),
+                last_workout: null,
                 total_workouts: 0,
                 current_streak: 0,
                 longest_streak: 0,
