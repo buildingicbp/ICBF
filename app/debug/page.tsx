@@ -174,21 +174,34 @@ export default function DebugPage() {
       
       // Simulate the sign-up flow logic
       addLog("1. Checking existing profiles...")
-      const { data: memberData } = await supabase.from('members').select('id').eq('user_id', user.id).single()
+      const { data: memberData } = await supabaseService
+        .from('members')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
       
-      const { data: trainerData } = await supabase.from('trainers').select('id').eq('user_id', user.id).single()
+      const { data: trainerData } = await supabaseService
+        .from('trainers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
       
       addLog(`📊 Member profile exists: ${!!memberData}`)
       addLog(`📊 Trainer profile exists: ${!!trainerData}`)
       
-      // Determine user type
+      // Determine user type - prioritize database over metadata
       let userType = 'member'
       if (trainerData) {
         userType = 'trainer'
+        addLog("🎯 User has trainer profile, setting userType to trainer")
       } else if (memberData) {
         userType = 'member'
+        addLog("🎯 User has member profile, setting userType to member")
       } else {
-        userType = user.user_metadata?.userType || 'member'
+        // For new users, we need to manually set the userType
+        addLog("⚠️ User has no profile, need to manually set userType")
+        addLog("💡 Use 'Set as Trainer' or 'Set as Member' buttons below")
+        return
       }
       
       addLog(`🎯 Determined user type: ${userType}`)
@@ -232,9 +245,17 @@ export default function DebugPage() {
       addLog("2. Testing dashboard routing logic...")
       
       // Check database again after potential creation
-      const { data: finalMemberData } = await supabase.from('members').select('id').eq('user_id', user.id).single()
+      const { data: finalMemberData } = await supabaseService
+        .from('members')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
       
-      const { data: finalTrainerData } = await supabase.from('trainers').select('id').eq('user_id', user.id).single()
+      const { data: finalTrainerData } = await supabaseService
+        .from('trainers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
       
       addLog(`📊 Final member profile: ${!!finalMemberData}`)
       addLog(`📊 Final trainer profile: ${!!finalTrainerData}`)
@@ -422,6 +443,128 @@ export default function DebugPage() {
     }
   }
 
+  // Add function to test Google OAuth flow simulation
+  const testGoogleOAuthFlow = async () => {
+    setLoading(true)
+    setDebugResults([])
+    
+    try {
+      addLog("🔐 Testing Google OAuth flow simulation...")
+      
+      // Get current user
+      const { data: sessionData } = await supabase.auth.getSession()
+      const user = sessionData.session?.user
+      
+      if (!user) {
+        addLog("❌ No user logged in for testing")
+        return
+      }
+      
+      addLog(`👤 Testing with user: ${user.email}`)
+      addLog(`📧 Current metadata: ${JSON.stringify(user.user_metadata)}`)
+      
+      // Simulate the auth callback logic with userType parameter
+      addLog("1. Simulating auth callback with userType parameter...")
+      
+      // Simulate URL parameter (this would come from the toggle selection)
+      const urlUserType = 'trainer' // Simulate selecting trainer
+      addLog(`🎯 Simulating URL userType parameter: ${urlUserType}`)
+      
+      // Update user metadata with userType
+      addLog(`🔄 Updating user metadata with userType: ${urlUserType}`)
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { userType: urlUserType }
+      })
+      
+      if (updateError) {
+        addLog(`❌ Failed to update user metadata: ${updateError.message}`)
+      } else {
+        addLog("✅ User metadata updated successfully")
+        
+        // Refresh session to get updated metadata
+        const { data: refreshData } = await supabase.auth.getSession()
+        const updatedUser = refreshData.session?.user
+        
+        if (!updatedUser) {
+          addLog("❌ Failed to get updated user session")
+          return
+        }
+        
+        addLog(`📧 Updated metadata: ${JSON.stringify(updatedUser.user_metadata)}`)
+        
+        // Check if user has a profile in the database
+        addLog("2. Checking for existing profile...")
+        const { data: memberData } = await supabaseService
+          .from('members')
+          .select('id')
+          .eq('user_id', updatedUser.id)
+          .single()
+        
+        const { data: trainerData } = await supabaseService
+          .from('trainers')
+          .select('id')
+          .eq('user_id', updatedUser.id)
+          .single()
+        
+        addLog(`📊 Member profile exists: ${!!memberData}`)
+        addLog(`📊 Trainer profile exists: ${!!trainerData}`)
+        
+        // If user doesn't exist in either table, create profile based on URL userType
+        if (!memberData && !trainerData) {
+          addLog("🆕 Creating new profile based on URL userType...")
+          
+          const profileData = {
+            user_id: updatedUser.id,
+            username: updatedUser.user_metadata?.full_name || updatedUser.email?.split('@')[0] || 'user',
+            email: updatedUser.email || '',
+            contact: updatedUser.user_metadata?.phone || '',
+            full_name: updatedUser.user_metadata?.full_name || updatedUser.user_metadata?.name || updatedUser.email?.split('@')[0] || 'User',
+          }
+          
+          addLog(`📝 Profile data: ${JSON.stringify(profileData)}`)
+          
+          if (urlUserType === 'trainer') {
+            addLog("🏋️ Creating trainer profile...")
+            const result = await createTrainerProfile(profileData)
+            if (result.error) {
+              addLog(`❌ Failed to create trainer profile: ${result.error.message}`)
+            } else {
+              addLog(`✅ Trainer profile created: ${JSON.stringify(result.data)}`)
+            }
+          } else {
+            addLog("👤 Creating member profile...")
+            const result = await createMemberProfile(profileData)
+            if (result.error) {
+              addLog(`❌ Failed to create member profile: ${result.error.message}`)
+            } else {
+              addLog(`✅ Member profile created: ${JSON.stringify(result.data)}`)
+            }
+          }
+        } else {
+          addLog("✅ User profile already exists")
+        }
+        
+        // Test dashboard routing
+        addLog("3. Testing dashboard routing...")
+        const finalUserType = updatedUser.user_metadata?.userType || 'member'
+        addLog(`🎯 Final userType from metadata: ${finalUserType}`)
+        
+        if (finalUserType === 'trainer') {
+          addLog("🎯 Should redirect to: /trainer-dashboard")
+        } else {
+          addLog("🎯 Should redirect to: /member-dashboard")
+        }
+      }
+      
+      addLog("✅ Google OAuth flow test completed")
+      
+    } catch (error) {
+      addLog(`❌ Google OAuth flow test error: ${error}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
@@ -442,6 +585,14 @@ export default function DebugPage() {
             className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
           >
             {loading ? "Testing..." : "Test Sign-Up Flow"}
+          </button>
+          
+          <button
+            onClick={testGoogleOAuthFlow} 
+            disabled={loading}
+            className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+          >
+            {loading ? "Testing..." : "Test Google OAuth Flow"}
           </button>
           
           <button
