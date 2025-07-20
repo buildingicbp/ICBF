@@ -12,41 +12,23 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export default function SignUpPage() {
-  const [isSignIn, setIsSignIn] = useState(true)
-  const [authMethod, setAuthMethod] = useState<'password' | 'otp'>('password')
-  const [userType, setUserType] = useState<'member' | 'trainer'>('member')
   const [showPassword, setShowPassword] = useState(false)
+  const [userType, setUserType] = useState("member")
+  const [isSignIn, setIsSignIn] = useState(false)
+  const [authMethod, setAuthMethod] = useState<'password' | 'otp'>('password')
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    username: '',
-    fullName: '',
-    phone: ''
+    email: "",
+    password: "",
+    username: "",
+    contact: "",
   })
-  const [passwordError, setPasswordError] = useState('')
-  const [isPasswordValid, setIsPasswordValid] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   
-  const { signIn, signUp, signInWithOTP, loading, error } = useAuth()
+  const { signIn, signUp, signInWithOTP, signInWithGoogle, loading, error } = useAuth()
   const router = useRouter()
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    
-    // Real-time password validation
-    if (name === 'password') {
-      if (value.length > 0 && value.length < 6) {
-        setPasswordError('Password must be at least 6 characters long')
-        setIsPasswordValid(false)
-      } else if (value.length >= 6) {
-        setPasswordError('')
-        setIsPasswordValid(true)
-      } else {
-        setPasswordError('')
-        setIsPasswordValid(false)
-      }
-    }
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,12 +47,6 @@ export default function SignUpPage() {
 
     if (isSignIn && authMethod === 'password' && !formData.password) {
       toast.error("Please enter your password")
-      return
-    }
-
-    // Password validation for sign up
-    if (!isSignIn && formData.password && formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters long")
       return
     }
 
@@ -95,11 +71,11 @@ export default function SignUpPage() {
             
             if (error.message.includes('Invalid login credentials')) {
               // Check if this might be a Google OAuth account
-              errorMessage = 'Invalid email or password. Please check your credentials and try again.'
+              errorMessage = 'Invalid email or password. If you signed up with Google, please use "Continue with Google Account" instead.'
             } else if (error.message.includes('Email not confirmed')) {
               errorMessage = 'Please check your email and click the verification link before signing in.'
             } else if (error.message.includes('User not found')) {
-              errorMessage = 'No account found with this email. Please sign up first.'
+              errorMessage = 'No account found with this email. Please sign up first or use "Continue with Google Account" if you signed up with Google.'
             }
             
             toast.error(errorMessage)
@@ -109,35 +85,42 @@ export default function SignUpPage() {
           }
         }
       } else {
-        // Sign Up
-        console.log("📝 Signing up with userType:", userType)
-        const { error } = await signUp(formData.email, formData.password, {
-          username: formData.username,
-          contact: formData.phone || '', // Make phone optional
-          userType: userType as 'member' | 'trainer',
-          full_name: formData.fullName // Assuming username is full name for now
-        })
+        console.log("📝 Starting sign-up process...")
+        console.log("📝 UserType selected:", userType)
+        console.log("📝 Form data:", formData)
+        console.log("🎯 CONFIRMING: Toggle selection is:", userType)
         
+        const signUpData = {
+          username: formData.username,
+          contact: formData.contact,
+          userType: userType as 'member' | 'trainer',
+          full_name: formData.username, // Use username as full name initially
+        }
+        
+        console.log("📝 Sign-up data being passed:", signUpData)
+        console.log("🎯 userType in signUpData:", signUpData.userType)
+        console.log("✅ CONFIRMED: userType will be passed as:", signUpData.userType)
+        
+        const { error } = await signUp(formData.email, formData.password, signUpData)
         if (error) {
           let errorMessage = error.message
           
           if (error.message.includes('User already registered')) {
-            errorMessage = 'An account with this email already exists. Please sign in instead.'
-          } else if (error.message.includes('Password should be at least 6 characters')) {
-            errorMessage = 'Password must be at least 6 characters long.'
-          } else if (error.message.includes('Invalid email')) {
-            errorMessage = 'Please enter a valid email address.'
+            errorMessage = 'An account with this email already exists. Please sign in instead, or use "Continue with Google Account" if you signed up with Google.'
           }
           
+          console.error("❌ Sign-up error:", error)
           toast.error(errorMessage)
         } else {
+          console.log("✅ Sign-up successful!")
           toast.success("Account created successfully! Please check your email to verify your account.")
-          router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`)
+          // Redirect to a verification page or show verification instructions
+          router.push(`/verification?email=${encodeURIComponent(formData.email)}`)
         }
       }
-    } catch (error) {
-      console.error("Form submission error:", error)
-      toast.error("An unexpected error occurred. Please try again.")
+    } catch (err) {
+      console.error("💥 Unexpected error in handleSubmit:", err)
+      toast.error("An unexpected error occurred")
     }
   }
 
@@ -215,6 +198,11 @@ export default function SignUpPage() {
                 : "Sign up to track your fitness goals and access personalized training programs."
               }
             </p>
+            {isSignIn && (
+              <p className="text-blue-600 text-xs mt-1">
+                💡 If you signed up with Google, use "Continue with Google Account" instead
+              </p>
+            )}
             
             {/* Authentication Method Toggle for Sign In */}
             {isSignIn && (
@@ -289,8 +277,7 @@ export default function SignUpPage() {
                   placeholder="Enter your E-mail address"
                   className="w-full rounded-full border-gray-300"
                   value={formData.email}
-                  onChange={handleInputChange}
-                  name="email"
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   required
                 />
               </div>
@@ -307,23 +294,21 @@ export default function SignUpPage() {
                       placeholder="Enter Username"
                       className="w-full rounded-full border-gray-300"
                       value={formData.username}
-                      onChange={handleInputChange}
-                      name="username"
+                      onChange={(e) => handleInputChange("username", e.target.value)}
                       required={!isSignIn}
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number (Optional)
+                    <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact (Optional)
                     </label>
-                    <input
+                    <Input
+                      id="contact"
                       type="tel"
-                      id="phone"
                       placeholder="+91 • Enter Phone Number"
                       className="w-full rounded-full border-gray-300"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      name="phone"
+                      value={formData.contact}
+                      onChange={(e) => handleInputChange("contact", e.target.value)}
                     />
                   </div>
                 </div>
@@ -335,28 +320,15 @@ export default function SignUpPage() {
                     Password
                   </label>
                   <div className="relative">
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      className={`w-full pr-10 rounded-full border-gray-300 ${
-                        passwordError ? 'border-red-500 focus:border-red-500' : 
-                        isPasswordValid ? 'border-green-500 focus:border-green-500' : ''
-                      }`}
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your Password"
+                      className="w-full pr-10 rounded-full border-gray-300"
                       value={formData.password}
-                      onChange={handleInputChange}
-                      name="password"
+                      onChange={(e) => handleInputChange("password", e.target.value)}
                       required
                     />
-                    {passwordError && (
-                      <p className="text-red-500 text-sm mt-1 ml-4">
-                        {passwordError}
-                      </p>
-                    )}
-                    {isPasswordValid && formData.password && (
-                      <p className="text-green-500 text-sm mt-1 ml-4">
-                        ✓ Password is valid
-                      </p>
-                    )}
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
@@ -380,8 +352,7 @@ export default function SignUpPage() {
                       placeholder="Enter your Password"
                       className="w-full pr-10 rounded-full border-gray-300"
                       value={formData.password}
-                      onChange={handleInputChange}
-                      name="password"
+                      onChange={(e) => handleInputChange("password", e.target.value)}
                       required
                     />
                     <button
@@ -428,6 +399,17 @@ export default function SignUpPage() {
                   ? (authMethod === 'otp' ? "Send OTP" : "Sign In")
                   : "Get Started"
               )}
+            </Button>
+
+            {/* Continue with Google */}
+            <Button
+              type="button"
+              onClick={handleGoogleSignIn}
+              className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 py-3 rounded-full flex items-center justify-center space-x-2 transition-colors"
+              disabled={loading}
+            >
+              {/* <Image src="/Sign.png" alt="Google" width={20} height={20} /> */}
+              <span>Coming Soon</span>
             </Button>
           </form>
 
