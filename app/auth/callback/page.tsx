@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic'
+
 export default function AuthCallback() {
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(true)
@@ -13,6 +16,12 @@ export default function AuthCallback() {
     const handleAuthCallback = async () => {
       try {
         console.log("🔄 ===== AUTH CALLBACK START =====")
+        
+        // Ensure we're on the client side
+        if (typeof window === 'undefined') {
+          console.log("❌ Not on client side, skipping")
+          return
+        }
         
         // Get userType from URL parameter using direct parsing
         const urlParams = new URLSearchParams(window.location.search)
