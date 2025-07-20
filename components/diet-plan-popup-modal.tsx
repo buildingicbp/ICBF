@@ -39,7 +39,7 @@ export default function DietPlanPopupModal({ isOpen, onClose }: DietPlanPopupMod
     const userType = user.user_metadata?.userType || 'member'
     const userEmail = user.email?.toLowerCase()
     
-    if (userEmail === 'gouravpanda2k04@gmail.com') {
+    if (userEmail === 'icanbefitter@gmail.com') {
       router.push('/admin-dashboard')
     } else if (userType === 'trainer') {
       router.push('/trainer-dashboard/ai-diet-planner')

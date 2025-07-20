@@ -41,7 +41,7 @@ export default function LandingPage() {
         console.log("Landing page - Full user metadata:", currentUser.user_metadata)
         
         // Check if user is admin
-        if (userEmail === 'gouravpanda2k04@gmail.com') {
+        if (userEmail === 'icanbefitter@gmail.com') {
           router.push("/admin-dashboard")
           return
         }

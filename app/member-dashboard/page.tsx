@@ -32,7 +32,7 @@ export default function MemberDashboardPage() {
       const userEmail = user.email?.toLowerCase()
       
       // Redirect if not a member
-      if (userEmail === 'gouravpanda2k04@gmail.com') {
+      if (userEmail === 'icanbefitter@gmail.com') {
         router.push("/admin-dashboard")
         return
       }

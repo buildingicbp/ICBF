@@ -68,7 +68,7 @@ All tables have RLS enabled with specific policies:
 - Trainers can manage sessions they're involved in
 
 #### Admin Policies
-- Admin (`gouravpanda2k04@gmail.com`) can view all data
+- Admin (`icanbefitter@gmail.com`) can view all data
 - Full access to all tables and records
 
 ### Data Validation

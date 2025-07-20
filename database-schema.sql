@@ -201,7 +201,7 @@ CREATE POLICY "Admin can view all members" ON members
     EXISTS (
       SELECT 1 FROM auth.users 
       WHERE auth.users.id = auth.uid() 
-      AND auth.users.email = 'gouravpanda2k04@gmail.com'
+      AND auth.users.email = 'icanbefitter@gmail.com'
     )
   );
 
@@ -210,7 +210,7 @@ CREATE POLICY "Admin can manage all members" ON members
     EXISTS (
       SELECT 1 FROM auth.users 
       WHERE auth.users.id = auth.uid() 
-      AND auth.users.email = 'gouravpanda2k04@gmail.com'
+      AND auth.users.email = 'icanbefitter@gmail.com'
     )
   );
 
@@ -219,7 +219,7 @@ CREATE POLICY "Admin can view all trainers" ON trainers
     EXISTS (
       SELECT 1 FROM auth.users 
       WHERE auth.users.id = auth.uid() 
-      AND auth.users.email = 'gouravpanda2k04@gmail.com'
+      AND auth.users.email = 'icanbefitter@gmail.com'
     )
   );
 
@@ -228,7 +228,7 @@ CREATE POLICY "Admin can manage all trainers" ON trainers
     EXISTS (
       SELECT 1 FROM auth.users 
       WHERE auth.users.id = auth.uid() 
-      AND auth.users.email = 'gouravpanda2k04@gmail.com'
+      AND auth.users.email = 'icanbefitter@gmail.com'
     )
   );
 

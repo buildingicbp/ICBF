@@ -127,8 +127,8 @@ export default function AdminDashboardPage() {
     if (!loading && user) {
       const userEmail = user.email?.toLowerCase()
       
-      // Only allow gouravpanda2k04@gmail.com to access admin dashboard
-      if (userEmail !== 'gouravpanda2k04@gmail.com') {
+      // Only allow icanbefitter@gmail.com to access admin dashboard
+      if (userEmail !== 'icanbefitter@gmail.com') {
         // Redirect based on user type
         const userType = user.user_metadata?.userType || 'member'
         if (userType === 'trainer') {
@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
   }, [user, loading, router])
 
   useEffect(() => {
-    if (user?.email === 'gouravpanda2k04@gmail.com' && supabase) {
+    if (user?.email === 'icanbefitter@gmail.com' && supabase) {
       fetchAllData()
     }
   }, [user, supabase])
