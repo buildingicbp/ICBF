@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
-export default function AuthCallback() {
+export default function OAuthCallback() {
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(true)
 
   useEffect(() => {
     const processAuth = async () => {
       try {
-        console.log("🔄 Auth callback started")
+        console.log("🔄 OAuth callback started")
         
         // Wait for client-side
         await new Promise(resolve => setTimeout(resolve, 200))
@@ -71,7 +71,7 @@ export default function AuthCallback() {
         }
         
       } catch (error) {
-        console.error("Auth callback error:", error)
+        console.error("OAuth callback error:", error)
         router.push('/signin')
       } finally {
         setIsProcessing(false)

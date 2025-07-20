@@ -617,7 +617,7 @@ export function useAuth() {
     const finalUserType = userType || 'member'
     console.log("🎯 Final userType for redirect:", finalUserType)
     
-    const redirectUrl = `${window.location.origin}/auth/callback?userType=${finalUserType}`
+    const redirectUrl = `${window.location.origin}/auth/oauth-callback?userType=${finalUserType}`
     console.log("🔗 Redirect URL:", redirectUrl)
     console.log("🔗 URL contains userType:", redirectUrl.includes('userType='))
     console.log("🔗 URL userType value:", redirectUrl.split('userType=')[1])
