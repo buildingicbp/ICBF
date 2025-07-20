@@ -1,82 +1,125 @@
 "use client"
 
-import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { supabase, supabaseService } from "@/lib/supabase"
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { toast } from 'sonner'
 
-export default function DashboardPage() {
-  const { user, loading } = useAuth()
+export default function Dashboard() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const handleRedirect = async () => {
-      console.log("🏠 Dashboard page - User:", user)
-      console.log("🏠 Dashboard page - Loading:", loading)
-      
-      if (!loading && !user) {
-        console.log("❌ No user found, redirecting to signin")
-        router.push("/signin")
-        return
-      }
+    const checkUserAndRedirect = async () => {
+      try {
+        console.log("🔄 ===== DASHBOARD ROUTING START =====")
+        
+        // Get current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          console.error("❌ Session error:", sessionError)
+          toast.error("Authentication error")
+          router.push('/signin')
+          return
+        }
 
-      if (!loading && user) {
-        console.log("✅ User found, checking user type")
-        
-        // Force refresh session to get latest metadata
-        const { data: sessionData } = await supabase.auth.getSession()
-        const currentUser = sessionData.session?.user || user
-        
-        console.log("📧 Current user metadata:", currentUser.user_metadata)
-        
-        // Get userType from metadata (set from toggle selection)
-        const userType = currentUser.user_metadata?.userType || 'member'
-        const userEmail = currentUser.email?.toLowerCase()
-        
-        console.log("🎯 User type from metadata (toggle selection):", userType)
-        console.log("📧 User email:", userEmail)
-        console.log("📧 Full user metadata:", currentUser.user_metadata)
-        
-        // Check if user is admin (specific email)
-        if (userEmail === 'gouravpanda2k04@gmail.com') {
-          console.log("👑 User is admin, redirecting to admin dashboard")
-          router.push("/admin-dashboard")
+        if (!session?.user) {
+          console.log("❌ No session found")
+          router.push('/signin')
           return
         }
+
+        console.log("✅ User authenticated:", session.user.email)
+        console.log("📊 User metadata:", session.user.user_metadata)
         
-        // PRIORITY: Use userType from metadata (toggle selection) first
-        console.log("🎯 Using userType from metadata (toggle selection):", userType)
+        // PRIORITY: Check userType in metadata FIRST
+        const userTypeFromMetadata = session.user.user_metadata?.userType
+        console.log("🎯 userType from metadata:", userTypeFromMetadata)
         
-        if (userType === 'trainer') {
-          console.log("🏋️ User is trainer (from toggle), redirecting to trainer dashboard")
-          router.push("/trainer-dashboard")
-          return
+        if (userTypeFromMetadata) {
+          console.log("✅ Found userType in metadata:", userTypeFromMetadata)
+          console.log("🎯 Redirecting based on metadata userType")
+          
+          if (userTypeFromMetadata === 'trainer') {
+            console.log("🏋️ Redirecting to trainer dashboard")
+            router.push('/trainer-dashboard')
+            return
+          } else {
+            console.log("👤 Redirecting to member dashboard")
+            router.push('/member-dashboard')
+            return
+          }
+        }
+        
+        // Fallback: Check database for profile
+        console.log("🔄 No userType in metadata, checking database...")
+        
+        const userId = session.user.id
+        
+        // Check trainers table
+        const { data: trainerData, error: trainerError } = await supabase
+          .from('trainers')
+          .select('id')
+          .eq('user_id', userId)
+          .single()
+        
+        if (trainerError && trainerError.code !== 'PGRST116') {
+          console.error("❌ Error checking trainers table:", trainerError)
+        }
+        
+        // Check members table
+        const { data: memberData, error: memberError } = await supabase
+          .from('members')
+          .select('id')
+          .eq('user_id', userId)
+          .single()
+        
+        if (memberError && memberError.code !== 'PGRST116') {
+          console.error("❌ Error checking members table:", memberError)
+        }
+        
+        console.log("📊 Trainer data:", trainerData)
+        console.log("📊 Member data:", memberData)
+        
+        // Determine userType based on database
+        if (trainerData && !memberData) {
+          console.log("🏋️ Found trainer profile, redirecting to trainer dashboard")
+          router.push('/trainer-dashboard')
+        } else if (memberData && !trainerData) {
+          console.log("👤 Found member profile, redirecting to member dashboard")
+          router.push('/member-dashboard')
+        } else if (trainerData && memberData) {
+          console.log("⚠️ User found in both tables, defaulting to trainer")
+          router.push('/trainer-dashboard')
         } else {
-          console.log("👤 User is member (from toggle), redirecting to member dashboard")
-          router.push("/member-dashboard")
-          return
+          console.log("❌ No profile found, redirecting to signin")
+          toast.error("No user profile found")
+          router.push('/signin')
         }
+        
+      } catch (error) {
+        console.error("💥 Dashboard routing error:", error)
+        toast.error("Error determining user type")
+        router.push('/signin')
+      } finally {
+        setIsLoading(false)
       }
     }
 
-    // Add a small delay to ensure session is fully loaded
-    const timer = setTimeout(() => {
-      handleRedirect()
-    }, 500)
+    checkUserAndRedirect()
+  }, [router])
 
-    return () => clearTimeout(timer)
-  }, [user, loading, router])
-
-  // Show loading while determining redirect
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading your dashboard...</p>
-        <p className="mt-2 text-sm text-gray-500">
-          User: {user ? user.email : 'None'} | Loading: {loading ? 'Yes' : 'No'}
-        </p>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Determining your dashboard...</p>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  return null
 } 
