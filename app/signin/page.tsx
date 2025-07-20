@@ -125,37 +125,8 @@ export default function SignUpPage() {
   }
 
   const handleGoogleSignIn = async () => {
-    try {
-      console.log("🔐 ===== GOOGLE OAUTH START =====")
-      console.log("🎯 Current toggle selection:", userType)
-      console.log("🎯 Toggle state value:", userType)
-      console.log("🎯 Toggle type:", typeof userType)
-      console.log("🔐 Starting Google sign-in with userType:", userType)
-      console.log("🎯 CONFIRMING: Google OAuth will use userType:", userType)
-      console.log("📧 Form data state:", formData)
-      console.log("🔐 ===== GOOGLE OAUTH CALLING FUNCTION =====")
-      
-      // Force the userType to be a string
-      const finalUserType = userType || 'member'
-      console.log("🎯 Final userType being passed:", finalUserType)
-      console.log("🎯 Final userType type:", typeof finalUserType)
-      
-      const { error } = await signInWithGoogle(finalUserType as 'member' | 'trainer')
-      
-      console.log("🔐 ===== GOOGLE OAUTH RESPONSE =====")
-      if (error) {
-        console.error("❌ Google sign-in error:", error)
-        toast.error(error.message)
-      } else {
-        console.log("✅ Google sign-in initiated successfully")
-        console.log("✅ CONFIRMED: Google OAuth initiated with userType:", finalUserType)
-        console.log("🎯 Final userType passed to OAuth:", finalUserType)
-      }
-      console.log("🔐 ===== GOOGLE OAUTH END =====")
-    } catch (err) {
-      console.error("💥 Unexpected error in Google sign-in:", err)
-      toast.error("An unexpected error occurred")
-    }
+    toast.info("Google OAuth coming soon! Please use email sign-in for now.")
+    return
   }
 
   // Show error toast when auth error occurs
