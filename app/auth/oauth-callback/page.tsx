@@ -74,10 +74,22 @@ export default function OAuthCallback() {
         
         // Create profile
         console.log("🔄 Creating profile for userType:", userType)
+        console.log("🎯 userType value:", userType)
+        console.log("🎯 userType type:", typeof userType)
+        console.log("🎯 userType === 'trainer':", userType === 'trainer')
+        console.log("🎯 userType === 'member':", userType === 'member')
         setDebugInfo(`Creating ${userType} profile...`)
         
-        if (userType === 'trainer') {
-          console.log("🏋️ Creating trainer profile...")
+        // Force userType to be a string and check exact value
+        const finalUserType = String(userType).toLowerCase()
+        console.log("🎯 Final userType after processing:", finalUserType)
+        console.log("🎯 Final userType === 'trainer':", finalUserType === 'trainer')
+        console.log("🎯 Final userType === 'member':", finalUserType === 'member')
+        
+        if (finalUserType === 'trainer') {
+          console.log("🏋️ CREATING TRAINER PROFILE - ENTERING TRAINER BLOCK")
+          setDebugInfo("Creating TRAINER profile...")
+          
           const { data: trainerData, error: trainerError } = await supabase.from('trainers').insert({
             user_id: session.user.id,
             username: session.user.email?.split('@')[0] || 'trainer',
@@ -120,8 +132,10 @@ export default function OAuthCallback() {
           setDebugInfo("Redirecting to trainer dashboard...")
           router.push('/trainer-dashboard')
           
-        } else {
-          console.log("👤 Creating member profile...")
+        } else if (finalUserType === 'member') {
+          console.log("👤 CREATING MEMBER PROFILE - ENTERING MEMBER BLOCK")
+          setDebugInfo("Creating MEMBER profile...")
+          
           const { data: memberData, error: memberError } = await supabase.from('members').insert({
             user_id: session.user.id,
             username: session.user.email?.split('@')[0] || 'member',
@@ -161,6 +175,12 @@ export default function OAuthCallback() {
           console.log("🎯 Redirecting to member dashboard...")
           setDebugInfo("Redirecting to member dashboard...")
           router.push('/member-dashboard')
+          
+        } else {
+          console.error("❌ INVALID USERTYPE:", finalUserType)
+          setDebugInfo(`Invalid userType: ${finalUserType}`)
+          toast.error("Invalid user type")
+          router.push('/signin')
         }
         
       } catch (error) {

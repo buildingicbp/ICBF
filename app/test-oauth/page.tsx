@@ -24,6 +24,9 @@ export default function TestOAuth() {
       const params = new URLSearchParams(window.location.search)
       const userType = params.get('userType')
       addResult(`🎯 UserType from URL: ${userType}`)
+      addResult(`🎯 UserType type: ${typeof userType}`)
+      addResult(`🎯 UserType === 'trainer': ${userType === 'trainer'}`)
+      addResult(`🎯 UserType === 'member': ${userType === 'member'}`)
       
       // Test 3: Check session
       const { data: { session } } = await supabase.auth.getSession()
