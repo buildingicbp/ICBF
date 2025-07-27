@@ -125,9 +125,9 @@ export default function LandingPage() {
 
         {/* Center Navigation - Desktop */}
         <nav className="hidden lg:flex items-center space-x-8">
-          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
+          <Link href="/blogs" className="text-black hover:text-slate-700 font-semibold transition-colors">
             Learn
-          </a>
+          </Link>
           <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
             Services
           </a>
@@ -229,7 +229,7 @@ export default function LandingPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center">
           {/* Left Content */}
-          <div className="space-y-6 sm:space-y-8 text-center lg:text-left">
+          <div className="space-y-6 sm:space-y-8 text-center">
             <div className="space-y-4 sm:space-y-6">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-[#1F509A] leading-tight">
                 It's Time To Love
@@ -251,20 +251,20 @@ export default function LandingPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/signin">
-                  <Button className="bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200">
+            <div className="space-y-4 flex flex-col items-center">
+              <div className="flex flex-col gap-4 w-full max-w-sm">
+                <Link href="/signin" className="w-full">
+                  <Button className="w-full bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200">
                     <User className="w-5 h-5 sm:w-6 sm:h-6" />
                     I Want To Get Fit
                   </Button>
                 </Link>
 
                 <div className="flex flex-col gap-2">
-                  <Link href="/signin">
+                  <Link href="/signin" className="w-full">
                     <Button
                       variant="outline"
-                      className="border-2 border-[#1F509A] text-[#1F509A] hover:bg-[#1F509A] hover:text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 bg-white shadow-md hover:shadow-lg transition-all duration-200"
+                      className="w-full border-2 border-[#1F509A] text-[#1F509A] hover:bg-[#1F509A] hover:text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 bg-white shadow-md hover:shadow-lg transition-all duration-200"
                     >
                       <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
                       Connect With Trainer
@@ -276,7 +276,7 @@ export default function LandingPage() {
             </div>
 
             {/* Trust Indicator */}
-            <div className="pt-4 flex justify-center lg:justify-start">
+            <div className="pt-4 flex justify-center">
               <Image
                 src="/trust.png"
                 alt="Trusted by 30+ fitness coaches"
@@ -388,6 +388,57 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Background Image with Text Overlay */}
+    <section className="hidden md:flex relative min-h-[400px] md:min-h-[500px] rounded-3xl overflow-hidden mb-12 items-center justify-center">
+      <Image
+        src="/Background.png"
+        alt="Fitness Journey Background"
+        fill
+        priority
+        className="object-contain w-full h-full absolute inset-0 z-0"
+      />
+      <div className="relative z-20 w-full h-full flex flex-col justify-center items-end pr-12 md:pr-24 -mt-40">
+        {/* Main Headline - positioned center-right */}
+        <div className="flex flex-col items-end text-right max-w-2xl mr-12 md:mr-24">
+          {/* Knowledge Is Power Badge - positioned above headline */}
+          <div className="mb-4">
+            <span className="inline-flex items-center bg-blue-500/80 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm font-manrope">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Knowledge is Power
+            </span>
+          </div>
+
+          <h1 className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-6 drop-shadow-xl text-right max-w-2xl font-manrope">
+            This Website Has All The<br />
+            Information To Get You Started On<br />
+            Your Fitness Journey !
+          </h1>
+
+          {/* Action Buttons - positioned below text on the right */}
+          <div className="flex flex-row gap-4">
+            <a href="/signin">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg transition-all duration-200 font-manrope">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                I Want To Get Fit
+              </button>
+            </a>
+            <a href="/signin">
+              <button className="bg-white/90 border border-blue-600 text-blue-700 hover:bg-blue-50 px-5 py-3 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg transition-all duration-200 font-manrope">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Connect With Trainer
+              </button>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
       {/* Meet the Minds Behind the Mission Section */}
       <section className="container mx-auto px-6 py-16">
         <div className="text-center mb-12">
@@ -448,46 +499,46 @@ export default function LandingPage() {
           </div>
 
           {/* Testimonials Grid */}
-          <div className="relative">
+          <div className="relative px-12">
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
                   id: 1,
-                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a Gallery.",
                   author: "Alex Santhman",
                   role: "Social worker",
-                  avatar: "/placeholder.svg?height=40&width=40",
-                  rating: 5,
-                  timeAgo: "3 months ago",
+                  avatar: "/placeholder-user.jpg",
+                  rating: 4.5,
+                  timeAgo: "4 months ago",
                 },
                 {
                   id: 2,
-                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a Gallery.",
                   author: "Alex Santhman",
                   role: "Social worker",
-                  avatar: "/placeholder.svg?height=40&width=40",
-                  rating: 5,
-                  timeAgo: "3 months ago",
+                  avatar: "/placeholder-user.jpg",
+                  rating: 4.5,
+                  timeAgo: "4 months ago",
                 },
                 {
                   id: 3,
-                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a Gallery.",
                   author: "Alex Santhman",
                   role: "Social worker",
-                  avatar: "/placeholder.svg?height=40&width=40",
-                  rating: 5,
-                  timeAgo: "3 months ago",
+                  avatar: "/placeholder-user.jpg",
+                  rating: 4.5,
+                  timeAgo: "4 months ago",
                 },
               ].map((testimonial, index) => (
-                <div key={testimonial.id} className="bg-blue-50 rounded-2xl p-6 relative">
+                <div key={testimonial.id} className="bg-white rounded-2xl overflow-hidden shadow-lg relative">
                   {/* Left Arrow on First Testimonial */}
                   {index === 0 && (
                     <Button 
                       variant="outline" 
-                      className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center bg-white shadow-md"
+                      className="absolute -left-16 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center bg-white shadow-lg z-20"
                       aria-label="Previous testimonials"
                     >
-                      <ArrowRight className="w-4 h-4 rotate-180 text-gray-600" />
+                      <ArrowRight className="w-5 h-5 rotate-180 text-gray-600" />
                     </Button>
                   )}
 
@@ -495,44 +546,68 @@ export default function LandingPage() {
                   {index === 2 && (
                     <Button 
                       variant="outline" 
-                      className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-10 h-10 rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center bg-white shadow-md"
+                      className="absolute -right-16 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center bg-white shadow-lg z-20"
                       aria-label="Next testimonials"
                     >
-                      <ArrowRight className="w-4 h-4 text-gray-600" />
+                      <ArrowRight className="w-5 h-5 text-gray-600" />
                     </Button>
                   )}
 
-                  {/* Quote Icon */}
-                  <div className="text-blue-400 text-4xl font-serif mb-4">"</div>
-
-                  {/* Testimonial Text */}
-                  <p className="text-gray-700 text-sm leading-relaxed mb-6">{testimonial.text}</p>
-
-                  {/* Author Info */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  {/* Before/After Image Section - Black Background */}
+                  <div className="bg-black h-48 relative">
+                    <div className="flex h-full">
+                      {/* Before Image */}
+                      <div className="w-1/2 h-full bg-gray-800 flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <div className="text-sm font-semibold mb-2">BEFORE</div>
+                          <div className="w-16 h-16 bg-gray-600 rounded-full mx-auto"></div>
+                        </div>
+                      </div>
+                      {/* After Image */}
+                      <div className="w-1/2 h-full bg-gray-700 flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <div className="text-sm font-semibold mb-2">AFTER</div>
+                          <div className="w-16 h-16 bg-gray-500 rounded-full mx-auto"></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Profile Picture Overlay */}
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
                       <Image
-                        src={testimonial.avatar || "/placeholder.svg"}
+                        src={testimonial.avatar}
                         alt={testimonial.author}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
+                        width={60}
+                        height={60}
+                        className="rounded-full border-4 border-white shadow-lg"
                       />
-                      <div>
-                        <h4 className="font-semibold text-gray-900 text-sm">{testimonial.author}</h4>
-                        <p className="text-gray-600 text-xs">{testimonial.role}</p>
+                    </div>
+                  </div>
+
+                  {/* Testimonial Content Section */}
+                  <div className="bg-blue-50 p-6 pt-8 relative">
+                    {/* Quote Icon */}
+                    <div className="text-blue-600 text-4xl font-serif absolute top-2 left-4">"</div>
+                    
+                    {/* Star Rating and Author Info */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex gap-1">
+                        {[...Array(4)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" style={{ clipPath: 'inset(0 50% 0 0)' }} />
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      {/* Star Rating */}
-                      <div className="flex gap-1 mb-1">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                      <p className="text-xs text-gray-500">{testimonial.timeAgo}</p>
+                    {/* Author Details */}
+                    <div className="mb-4">
+                      <h4 className="font-semibold text-gray-900 text-sm">{testimonial.author}</h4>
+                      <p className="text-gray-600 text-xs">{testimonial.role}</p>
+                      <p className="text-gray-500 text-xs">{testimonial.timeAgo}</p>
                     </div>
+
+                    {/* Testimonial Text */}
+                    <p className="text-gray-700 text-sm leading-relaxed">{testimonial.text}</p>
                   </div>
                 </div>
               ))}
