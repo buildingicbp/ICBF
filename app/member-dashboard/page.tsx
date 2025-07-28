@@ -78,7 +78,10 @@ export default function MemberDashboardPage() {
         {/* Sign Out Button - Top Right */}
         <div className="flex justify-end mb-4">
           <Button
-            onClick={signOut}
+            onClick={async () => {
+              await signOut()
+              router.push('/')
+            }}
             variant="outline"
             className="flex items-center gap-2 text-gray-600 hover:text-red-600 hover:border-red-600"
           >

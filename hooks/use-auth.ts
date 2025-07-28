@@ -226,11 +226,6 @@ export function useAuth() {
       user: null,
     }))
 
-    // Redirect to main page after sign out
-    if (typeof window !== 'undefined') {
-      window.location.href = '/'
-    }
-
     return { success: true }
   }
 
