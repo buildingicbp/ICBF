@@ -1,13 +1,12 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
-function AuthCallbackContent() {
+export default function AuthCallback() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [isProcessing, setIsProcessing] = useState(true)
   const [debugInfo, setDebugInfo] = useState('')
 
@@ -26,8 +25,9 @@ function AuthCallbackContent() {
           return
         }
         
-        // Parse URL parameters
-        const userType = searchParams.get('userType') || 'member'
+        // Parse URL parameters manually to avoid useSearchParams during build
+        const urlParams = new URLSearchParams(window.location.search)
+        const userType = urlParams.get('userType') || 'member'
         
         console.log("🎯 UserType from URL:", userType)
         console.log("🔗 Full URL:", window.location.href)
@@ -92,7 +92,7 @@ function AuthCallbackContent() {
     }
     
     processAuth()
-  }, [router, searchParams])
+  }, [router])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -102,20 +102,5 @@ function AuthCallbackContent() {
         <p className="text-sm text-gray-500 max-w-md mx-auto">{debugInfo}</p>
       </div>
     </div>
-  )
-}
-
-export default function AuthCallback() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 mb-2">Loading...</p>
-        </div>
-      </div>
-    }>
-      <AuthCallbackContent />
-    </Suspense>
   )
 } 
