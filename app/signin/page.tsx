@@ -79,22 +79,39 @@ export default function SignUpPage() {
         console.log("📝 Form data:", formData)
         console.log("🎯 New account creation - always using 'member' userType")
         
-        // Check if user already exists in members table before attempting sign-up
-        console.log("🔍 Checking if user already exists in members table...")
+        // FINAL FIX: Check both auth.users and members table for existing email
+        let userExists = false;
         try {
-          const { data: existingMember, error: checkError } = await supabaseService
-            .from('members')
+          // 1. Check Supabase Auth for existing user
+          const { data: userData, error: userError } = await supabaseService
+            .from('auth.users')
             .select('email')
             .eq('email', formData.email)
-            .single()
-          
-          if (existingMember) {
-            console.log("❌ User already exists in members table!")
-            toast.error("An account with this email already exists. Please sign in instead.")
-            return
+            .maybeSingle();
+          if (userData) {
+            userExists = true;
           }
-        } catch (checkErr) {
-          console.log("🔍 User not found in members table, proceeding with sign-up...")
+        } catch (e) {
+          console.error("Error checking auth.users:", e);
+        }
+        // 2. Check members table (optional, for extra safety)
+        if (!userExists) {
+          try {
+            const { data: existingMember, error: checkError } = await supabaseService
+              .from('members')
+              .select('email')
+              .eq('email', formData.email)
+              .maybeSingle();
+            if (existingMember) {
+              userExists = true;
+            }
+          } catch (checkErr) {
+            console.log("User not found in members table, proceeding with sign-up...");
+          }
+        }
+        if (userExists) {
+          toast.error("An account with this email already exists. Please sign in instead.");
+          return;
         }
         
         const signUpData = {
