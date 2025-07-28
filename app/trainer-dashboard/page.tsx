@@ -15,20 +15,23 @@ import {
   Clock,
   Award,
   Target,
-  DollarSign
+  DollarSign,
+  LogOut
 } from "lucide-react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 
 export default function TrainerDashboardPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, signOut } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
+    // If loading is complete and no user, redirect to signin
     if (!loading && !user) {
       router.push("/signin")
       return
     }
 
+    // If user exists and loading is complete
     if (!loading && user) {
       const userType = user.user_metadata?.userType || 'member'
       const userEmail = user.email?.toLowerCase()
@@ -45,6 +48,17 @@ export default function TrainerDashboardPage() {
       }
     }
   }, [user, loading, router])
+
+  // Add a separate effect to handle sign-out redirect
+  useEffect(() => {
+    // If user becomes null after being authenticated, redirect to home
+    if (!loading && !user && typeof window !== 'undefined') {
+      // Check if we're on a dashboard page
+      if (window.location.pathname.includes('dashboard')) {
+        window.location.href = '/'
+      }
+    }
+  }, [user, loading])
 
 
 
@@ -70,6 +84,28 @@ export default function TrainerDashboardPage() {
       
       {/* Main Content */}
       <main className="flex-1 lg:ml-0 p-4 lg:p-8">
+        {/* Sign Out Button - Top Right */}
+        <div className="flex justify-end mb-4">
+          <Button
+            onClick={async () => {
+              try {
+                await signOut()
+                // Force redirect to home page
+                window.location.href = '/'
+              } catch (error) {
+                console.error('Sign out error:', error)
+                // Fallback redirect
+                window.location.href = '/'
+              }
+            }}
+            variant="outline"
+            className="flex items-center gap-2 text-gray-600 hover:text-red-600 hover:border-red-600"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
+        </div>
+        
         <div className="space-y-6">
           {/* Welcome Section */}
           <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg shadow p-6 text-white">

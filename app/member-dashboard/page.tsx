@@ -23,11 +23,13 @@ export default function MemberDashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
+    // If loading is complete and no user, redirect to signin
     if (!loading && !user) {
       router.push("/signin")
       return
     }
 
+    // If user exists and loading is complete
     if (!loading && user) {
       // Check if email is confirmed
       if (!user.email_confirmed_at) {
@@ -50,6 +52,17 @@ export default function MemberDashboardPage() {
       }
     }
   }, [user, loading, router])
+
+  // Add a separate effect to handle sign-out redirect
+  useEffect(() => {
+    // If user becomes null after being authenticated, redirect to home
+    if (!loading && !user && typeof window !== 'undefined') {
+      // Check if we're on a dashboard page
+      if (window.location.pathname.includes('dashboard')) {
+        window.location.href = '/'
+      }
+    }
+  }, [user, loading])
 
 
 
@@ -79,8 +92,15 @@ export default function MemberDashboardPage() {
         <div className="flex justify-end mb-4">
           <Button
             onClick={async () => {
-              await signOut()
-              router.push('/')
+              try {
+                await signOut()
+                // Force redirect to home page
+                window.location.href = '/'
+              } catch (error) {
+                console.error('Sign out error:', error)
+                // Fallback redirect
+                window.location.href = '/'
+              }
             }}
             variant="outline"
             className="flex items-center gap-2 text-gray-600 hover:text-red-600 hover:border-red-600"
