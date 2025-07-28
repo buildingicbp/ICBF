@@ -78,6 +78,8 @@ export default function SignUpPage() {
         console.log("📝 Form data:", formData)
         console.log("🎯 New account creation - always using 'member' userType")
         
+
+        
         const signUpData = {
           username: formData.username,
           contact: formData.contact,
@@ -95,12 +97,10 @@ export default function SignUpPage() {
           // Handle common sign-up errors with user-friendly messages
           if (error.message.includes('User already registered') || 
               error.message.includes('already been registered') ||
-              error.message.includes('already exists')) {
+              error.message.includes('already exists') ||
+              error.message.includes('User already signed up') ||
+              error.message.includes('already signed up')) {
             errorMessage = 'An account with this email already exists. Please sign in instead.'
-            // Automatically switch to sign-in tab for better UX
-            setTimeout(() => {
-              setIsSignIn(true)
-            }, 2000) // Switch after 2 seconds so user can read the message
           } else if (error.message.includes('Password should be at least')) {
             errorMessage = 'Password must be at least 6 characters long.'
           } else if (error.message.includes('Invalid email')) {
@@ -110,6 +110,7 @@ export default function SignUpPage() {
           }
           
           console.error("❌ Sign-up error:", error)
+          console.error("❌ Full error object:", JSON.stringify(error, null, 2))
           toast.error(errorMessage)
         } else {
           console.log("✅ Sign-up successful!")
