@@ -28,6 +28,12 @@ export default function MemberDashboardPage() {
     }
 
     if (!loading && user) {
+      // Check if email is confirmed
+      if (!user.email_confirmed_at) {
+        router.push("/verification")
+        return
+      }
+
       const userType = user.user_metadata?.userType || 'member'
       const userEmail = user.email?.toLowerCase()
       

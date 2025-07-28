@@ -111,7 +111,7 @@ export function useAuth() {
           ...userData,
           userType: userType, // Ensure userType is included in metadata
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?userType=${userType}`,
+        emailRedirectTo: `${window.location.origin}/member-dashboard`,
       },
     })
 
