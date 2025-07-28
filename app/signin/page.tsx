@@ -10,7 +10,7 @@ import Link from "next/link"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { supabaseService } from "@/lib/supabase"
+
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -79,39 +79,29 @@ export default function SignUpPage() {
         console.log("📝 Form data:", formData)
         console.log("🎯 New account creation - always using 'member' userType")
         
-        // FINAL FIX: Check both auth.users and members table for existing email
-        let userExists = false;
+        // Check if user already exists using secure backend API
+        console.log("🔍 Checking if user already exists via API...");
         try {
-          // 1. Check Supabase Auth for existing user
-          const { data: userData, error: userError } = await supabaseService
-            .from('auth.users')
-            .select('email')
-            .eq('email', formData.email)
-            .maybeSingle();
-          if (userData) {
-            userExists = true;
+          const response = await fetch('/api/check-user-exists', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: formData.email }),
+          });
+
+          const result = await response.json();
+
+          if (result.exists) {
+            console.log("❌ User already exists:", result.user);
+            toast.error("An account with this email already exists. Please sign in instead.");
+            return;
+          } else {
+            console.log("✅ User does not exist, proceeding with sign-up...");
           }
-        } catch (e) {
-          console.error("Error checking auth.users:", e);
-        }
-        // 2. Check members table (optional, for extra safety)
-        if (!userExists) {
-          try {
-            const { data: existingMember, error: checkError } = await supabaseService
-              .from('members')
-              .select('email')
-              .eq('email', formData.email)
-              .maybeSingle();
-            if (existingMember) {
-              userExists = true;
-            }
-          } catch (checkErr) {
-            console.log("User not found in members table, proceeding with sign-up...");
-          }
-        }
-        if (userExists) {
-          toast.error("An account with this email already exists. Please sign in instead.");
-          return;
+        } catch (apiError) {
+          console.error("Error checking user existence:", apiError);
+          // Continue with sign-up if API check fails (fail-safe)
         }
         
         const signUpData = {
