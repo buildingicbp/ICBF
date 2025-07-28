@@ -94,18 +94,7 @@ export default function SignUpPage() {
 
           if (result.exists) {
             console.log("❌ User already exists:", result.user);
-            console.log("🚨 SHOWING ERROR TOAST NOW");
-            
-            // Show toast error
-            toast.error("An account with this email already exists. Please sign in instead.", {
-              duration: 5000, // Show for 5 seconds
-              position: "top-center"
-            });
-            
-            // Also show alert as fallback
-            alert("An account with this email already exists. Please sign in instead.");
-            
-            console.log("✅ Error toast and alert should be visible now");
+            toast.error("An account with this email already exists. Please sign in instead.");
             return;
           } else {
             console.log("✅ User does not exist, proceeding with sign-up...");
