@@ -10,6 +10,7 @@ import Link from "next/link"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { supabaseService } from "@/lib/supabase"
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -78,7 +79,23 @@ export default function SignUpPage() {
         console.log("📝 Form data:", formData)
         console.log("🎯 New account creation - always using 'member' userType")
         
-
+        // Check if user already exists in members table before attempting sign-up
+        console.log("🔍 Checking if user already exists in members table...")
+        try {
+          const { data: existingMember, error: checkError } = await supabaseService
+            .from('members')
+            .select('email')
+            .eq('email', formData.email)
+            .single()
+          
+          if (existingMember) {
+            console.log("❌ User already exists in members table!")
+            toast.error("An account with this email already exists. Please sign in instead.")
+            return
+          }
+        } catch (checkErr) {
+          console.log("🔍 User not found in members table, proceeding with sign-up...")
+        }
         
         const signUpData = {
           username: formData.username,
