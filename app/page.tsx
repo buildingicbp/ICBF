@@ -348,7 +348,10 @@ export default function LandingPage() {
                       Get Yourself A Personalized Diet Plan with Our ICBF AI
                     </h3>
 
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl">
+                    <Button 
+                      onClick={() => window.location.href = '/ai-diet-planner'}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl"
+                    >
                       Try For Free →
                     </Button>
                   </div>

@@ -1,9 +1,14 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, User, ArrowRight } from "lucide-react"
+import { Calendar, Clock, User, ArrowRight, Filter } from "lucide-react"
+import { useState } from "react"
 
 export default function BlogsPage() {
+  const [selectedTag, setSelectedTag] = useState<string>("All")
+
   const blogPosts = [
     {
       id: 1,
@@ -13,6 +18,7 @@ export default function BlogsPage() {
       date: "April 6, 2019",
       readTime: "10 min read",
       category: "Beginner Guide",
+      tags: ["Motivation", "Beginner Guide", "Fitness"],
       image: "/placeholder.jpg",
       slug: "fitness-blueprint-beginners"
     },
@@ -24,6 +30,7 @@ export default function BlogsPage() {
       date: "March 2019",
       readTime: "8 min read",
       category: "Motivation",
+      tags: ["Motivation", "Lifestyle", "Mental Health"],
       image: "/placeholder.jpg",
       slug: "icanbefitter-home"
     },
@@ -35,6 +42,7 @@ export default function BlogsPage() {
       date: "March 5, 2024",
       readTime: "10 min read",
       category: "Nutrition",
+      tags: ["Nutrition", "Health", "Weight Loss"],
       image: "/placeholder.jpg",
       slug: "nutrition-myths-debunked"
     },
@@ -46,6 +54,7 @@ export default function BlogsPage() {
       date: "February 28, 2024",
       readTime: "6 min read",
       category: "Mental Health",
+      tags: ["Mental Health", "Motivation", "Wellness"],
       image: "/placeholder.jpg",
       slug: "mental-health-fitness-connection"
     },
@@ -57,6 +66,7 @@ export default function BlogsPage() {
       date: "February 20, 2024",
       readTime: "7 min read",
       category: "Home Workouts",
+      tags: ["Home Workouts", "Fitness", "Equipment"],
       image: "/placeholder.jpg",
       slug: "home-workout-essentials"
     },
@@ -68,10 +78,55 @@ export default function BlogsPage() {
       date: "February 15, 2024",
       readTime: "9 min read",
       category: "Recovery",
+      tags: ["Recovery", "Athletes", "Performance"],
       image: "/placeholder.jpg",
       slug: "recovery-strategies-athletes"
+    },
+    {
+      id: 7,
+      title: "The Science of Muscle Building",
+      excerpt: "Understanding the principles of hypertrophy and how to maximize muscle growth through proper training and nutrition.",
+      author: "Strength Coach",
+      date: "February 10, 2024",
+      readTime: "12 min read",
+      category: "Strength Training",
+      tags: ["Strength Training", "Muscle Building", "Nutrition"],
+      image: "/placeholder.jpg",
+      slug: "science-muscle-building"
+    },
+    {
+      id: 8,
+      title: "Mindful Eating: Transform Your Relationship with Food",
+      excerpt: "Learn how to develop a healthy relationship with food through mindful eating practices and intuitive nutrition.",
+      author: "Nutrition Therapist",
+      date: "February 5, 2024",
+      readTime: "8 min read",
+      category: "Nutrition",
+      tags: ["Nutrition", "Mindful Eating", "Mental Health"],
+      image: "/placeholder.jpg",
+      slug: "mindful-eating-transform-food-relationship"
+    },
+    {
+      id: 9,
+      title: "Cardio vs Strength: Finding Your Perfect Balance",
+      excerpt: "Discover how to balance cardiovascular training with strength work for optimal fitness and health outcomes.",
+      author: "Fitness Coach",
+      date: "January 30, 2024",
+      readTime: "11 min read",
+      category: "Fitness",
+      tags: ["Fitness", "Cardio", "Strength Training"],
+      image: "/placeholder.jpg",
+      slug: "cardio-vs-strength-perfect-balance"
     }
   ]
+
+  // Get all unique tags from blog posts
+  const allTags = ["All", ...Array.from(new Set(blogPosts.flatMap(post => post.tags)))]
+
+  // Filter blog posts based on selected tag
+  const filteredPosts = selectedTag === "All" 
+    ? blogPosts 
+    : blogPosts.filter(post => post.tags.includes(selectedTag))
 
   return (
     <div className="bg-white min-h-screen">
@@ -123,11 +178,41 @@ export default function BlogsPage() {
         </div>
       </section>
 
+      {/* Filter Section */}
+      <section className="py-8 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="w-5 h-5 text-gray-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Filter by Topic</h2>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3">
+              {allTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(tag)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    selectedTag === tag
+                      ? 'bg-[#1F509A] text-white shadow-md'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-[#1F509A]'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 text-sm text-gray-600">
+              Showing {filteredPosts.length} of {blogPosts.length} articles
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Blog Posts Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogPosts.map((post) => (
+            {filteredPosts.map((post) => (
               <article key={post.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 <div className="relative h-48">
                   <Image
@@ -167,6 +252,23 @@ export default function BlogsPage() {
                     {post.excerpt}
                   </p>
                   
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {post.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-medium"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {post.tags.length > 3 && (
+                      <span className="bg-gray-100 text-gray-500 px-2 py-1 rounded-md text-xs font-medium">
+                        +{post.tags.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                  
                   <Link href={`/blogs/${post.slug}`}>
                     <Button 
                       variant="ghost" 
@@ -183,27 +285,7 @@ export default function BlogsPage() {
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <section className="bg-gray-50 py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Stay Updated with Our Latest Articles
-          </h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Get the latest fitness tips, nutrition advice, and wellness insights delivered straight to your inbox.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1F509A] focus:border-transparent"
-            />
-            <Button className="bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-6 py-3 rounded-lg">
-              Subscribe
-            </Button>
-          </div>
-        </div>
-      </section>
+
     </div>
   )
 } 

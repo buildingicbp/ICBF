@@ -13,12 +13,13 @@ import {
   Heart,
   Dumbbell,
   Clock,
-  Award
+  Award,
+  LogOut
 } from "lucide-react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 
 export default function MemberDashboardPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, signOut } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -74,6 +75,18 @@ export default function MemberDashboardPage() {
       
       {/* Main Content */}
       <main className="flex-1 lg:ml-0 p-4 lg:p-8">
+        {/* Sign Out Button - Top Right */}
+        <div className="flex justify-end mb-4">
+          <Button
+            onClick={signOut}
+            variant="outline"
+            className="flex items-center gap-2 text-gray-600 hover:text-red-600 hover:border-red-600"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
+        </div>
+        
         <div className="space-y-6">
           {/* Welcome Section */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow p-6 text-white">

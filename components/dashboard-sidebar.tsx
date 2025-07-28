@@ -49,7 +49,6 @@ export function DashboardSidebar({ userType, activePage = 'dashboard' }: Dashboa
     { icon: Calendar, label: 'Schedule', href: '/member-dashboard/schedule', active: activePage === 'schedule' },
     { icon: TrendingUp, label: 'Progress', href: '/member-dashboard/progress', active: activePage === 'progress' },
     { icon: Award, label: 'Achievements', href: '/member-dashboard/achievements', active: activePage === 'achievements' },
-    { icon: Utensils, label: 'AI Diet Planner', href: '/member-dashboard/ai-diet-planner', active: activePage === 'ai-diet-planner' },
     { icon: User, label: 'Profile', href: '/member-dashboard/profile', active: activePage === 'profile' },
     { icon: Settings, label: 'Settings', href: '/member-dashboard/settings', active: activePage === 'settings' },
   ]
@@ -61,7 +60,6 @@ export function DashboardSidebar({ userType, activePage = 'dashboard' }: Dashboa
     { icon: MessageSquare, label: 'Messages', href: '/trainer-dashboard/messages', active: activePage === 'messages' },
     { icon: Target, label: 'Workout Plans', href: '/trainer-dashboard/workouts', active: activePage === 'workouts' },
     { icon: TrendingUp, label: 'Client Progress', href: '/trainer-dashboard/progress', active: activePage === 'progress' },
-    { icon: Utensils, label: 'AI Diet Planner', href: '/trainer-dashboard/ai-diet-planner', active: activePage === 'ai-diet-planner' },
     { icon: DollarSign, label: 'Earnings', href: '/trainer-dashboard/earnings', active: activePage === 'earnings' },
     { icon: Star, label: 'Reviews', href: '/trainer-dashboard/reviews', active: activePage === 'reviews' },
     { icon: User, label: 'Profile', href: '/trainer-dashboard/profile', active: activePage === 'profile' },
@@ -149,23 +147,7 @@ export function DashboardSidebar({ userType, activePage = 'dashboard' }: Dashboa
             ))}
           </nav>
 
-          {/* Sign Out */}
-          <div className="p-4 border-t border-gray-200">
-            <Button
-              variant="ghost"
-              className={`w-full justify-start h-10 text-red-600 hover:text-red-700 hover:bg-red-50 ${
-                isCollapsed ? 'px-2' : 'px-3'
-              }`}
-              onClick={handleSignOut}
-            >
-              <LogOut className={`w-4 h-4 ${isCollapsed ? 'mx-auto' : 'mr-3'}`} />
-              {!isCollapsed && (
-                <span className="transition-opacity duration-300">
-                  Sign Out
-                </span>
-              )}
-            </Button>
-          </div>
+
         </div>
       </div>
 
