@@ -1,20 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase, createMemberProfile } from '@/lib/supabase'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
-export default function OAuthCallback() {
+export default function AuthCallback() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isProcessing, setIsProcessing] = useState(true)
   const [debugInfo, setDebugInfo] = useState('')
 
   useEffect(() => {
     const processAuth = async () => {
       try {
-        console.log("🔄 ===== OAUTH CALLBACK START =====")
-        setDebugInfo("Starting OAuth callback...")
+        console.log("🔄 ===== EMAIL CONFIRMATION CALLBACK START =====")
+        setDebugInfo("Processing email confirmation...")
         
         // Wait for client-side
         await new Promise(resolve => setTimeout(resolve, 500))
@@ -26,12 +27,10 @@ export default function OAuthCallback() {
         }
         
         // Parse URL parameters
-        const params = new URLSearchParams(window.location.search)
-        const userType = params.get('userType') || 'member'
+        const userType = searchParams.get('userType') || 'member'
         
         console.log("🎯 UserType from URL:", userType)
         console.log("🔗 Full URL:", window.location.href)
-        console.log("🔗 Search params:", window.location.search)
         setDebugInfo(`UserType from URL: ${userType}`)
         
         // Get session
@@ -58,54 +57,18 @@ export default function OAuthCallback() {
         console.log("📊 User metadata:", session.user.user_metadata)
         setDebugInfo(`User authenticated: ${session.user.email}`)
         
-        // Update metadata with user type
-        console.log("🔄 Updating user metadata...")
-        const { error: updateError } = await supabase.auth.updateUser({
-          data: { 
-            userType, 
-            signupDate: new Date().toISOString(),
-            username: session.user.email?.split('@')[0] || 'user',
-            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User'
-          }
-        })
-        
-        if (updateError) {
-          console.error("❌ Failed to update metadata:", updateError)
-          setDebugInfo(`Metadata update failed: ${updateError.message}`)
-        } else {
-          console.log("✅ Metadata updated successfully")
-          setDebugInfo("Metadata updated successfully")
+        // Check if user is confirmed
+        if (!session.user.email_confirmed_at) {
+          console.log("❌ Email not confirmed")
+          setDebugInfo("Email not confirmed")
+          toast.error("Email not confirmed")
+          router.push('/signin')
+          return
         }
         
-        // Create member profile for new users
-        if (userType === 'member') {
-          try {
-            console.log("🆕 Creating member profile for OAuth user:", session.user.id)
-            
-            const profileData = {
-              user_id: session.user.id,
-              username: session.user.email?.split('@')[0] || 'user',
-              email: session.user.email || '',
-              contact: '',
-              full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-            }
-
-            console.log("📝 Profile data:", profileData)
-
-            const result = await createMemberProfile(profileData)
-            if (result.error) {
-              console.error("❌ Failed to create member profile:", result.error)
-              // Don't fail the OAuth flow if profile creation fails
-            } else {
-              console.log("✅ Member profile created successfully:", result.data)
-              setDebugInfo("Member profile created successfully")
-            }
-          } catch (profileError) {
-            console.error('❌ Error creating member profile:', profileError)
-            // Don't fail the OAuth flow if profile creation fails
-          }
-        }
-
+        console.log("✅ Email confirmed at:", session.user.email_confirmed_at)
+        setDebugInfo("Email confirmed successfully")
+        
         // Redirect based on user type
         console.log("🎯 Redirecting based on userType:", userType)
         setDebugInfo(`Redirecting to ${userType} dashboard...`)
@@ -119,7 +82,7 @@ export default function OAuthCallback() {
         }
         
       } catch (error) {
-        console.error("💥 OAuth callback error:", error)
+        console.error("💥 Auth callback error:", error)
         setDebugInfo(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
         toast.error("Authentication failed")
         router.push('/signin')
@@ -129,13 +92,13 @@ export default function OAuthCallback() {
     }
     
     processAuth()
-  }, [router])
+  }, [router, searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600 mb-2">Setting up your account...</p>
+        <p className="text-gray-600 mb-2">Confirming your email...</p>
         <p className="text-sm text-gray-500 max-w-md mx-auto">{debugInfo}</p>
       </div>
     </div>

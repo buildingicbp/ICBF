@@ -4,12 +4,30 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
 
+// Clean up service key (remove any whitespace or newlines)
+const cleanServiceKey = supabaseServiceKey?.trim()
+
+// Log environment variables (without exposing sensitive data)
+console.log("Environment check:", {
+  hasUrl: !!supabaseUrl,
+  hasAnonKey: !!supabaseAnonKey,
+  hasServiceKey: !!supabaseServiceKey,
+  urlLength: supabaseUrl?.length || 0,
+  anonKeyLength: supabaseAnonKey?.length || 0,
+  serviceKeyLength: supabaseServiceKey?.length || 0
+})
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Service client for admin operations (bypasses RLS)
 // Use service key if available, otherwise use regular client
-export const supabaseService = supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey)
+export const supabaseService = cleanServiceKey 
+  ? createClient(supabaseUrl, cleanServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
   : supabase
 
 // Database table types
@@ -76,35 +94,86 @@ export const createMemberProfile = async (userData: {
   full_name?: string
 }) => {
   console.log("Creating member profile with data:", userData)
+  console.log("Data validation:", {
+    user_id: userData.user_id ? 'present' : 'missing',
+    username: userData.username ? 'present' : 'missing',
+    email: userData.email ? 'present' : 'missing',
+    contact: userData.contact ? 'present' : 'missing',
+    full_name: userData.full_name ? 'present' : 'missing'
+  })
   
   try {
-    // Use regular client directly - this should work with proper RLS policies
-    const { data, error } = await supabase
+    // Use service role client for reliable database operations
+    const insertData = {
+      user_id: userData.user_id,
+      username: userData.username,
+      email: userData.email,
+      contact: userData.contact,
+      full_name: userData.full_name || userData.username,
+      join_date: new Date().toISOString(),
+    }
+    
+    console.log("Inserting data:", insertData)
+    console.log("Service client available:", !!supabaseService)
+    console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log("Service key present:", !!process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY)
+    console.log("Service key starts with:", process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + "...")
+    
+    // Test basic connection first
+    console.log("Testing basic connection...")
+    const { data: testData, error: testError } = await supabaseService
       .from('members')
-      .insert({
-        user_id: userData.user_id,
-        username: userData.username,
-        email: userData.email,
-        contact: userData.contact,
-        full_name: userData.full_name || userData.username,
-        join_date: new Date().toISOString(),
-        total_workouts: 0,
-        current_streak: 0,
-        longest_streak: 0,
-        total_calories_burned: 0,
-      })
+      .select('count')
+      .limit(1)
+    
+    if (testError) {
+      console.error("Basic connection test failed:", testError)
+      return { data: null, error: testError }
+    } else {
+      console.log("Basic connection test passed")
+    }
+    
+    const { data, error } = await supabaseService
+      .from('members')
+      .insert(insertData)
       .select()
       .single()
 
     if (error) {
-      console.error("Error creating member profile:", error)
-      return { data: null, error }
+      console.error("Service client error creating member profile:", error)
+      console.error("Error type:", typeof error)
+      console.error("Error keys:", Object.keys(error))
+      console.error("Error stringified:", JSON.stringify(error, null, 2))
+      console.error("Error details:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      
+      // Try with regular client as fallback
+      console.log("Trying with regular client as fallback...")
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('members')
+        .insert(insertData)
+        .select()
+        .single()
+      
+      if (fallbackError) {
+        console.error("Regular client also failed:", fallbackError)
+        return { data: null, error: fallbackError }
+      } else {
+        console.log("Regular client succeeded:", fallbackData)
+        return { data: fallbackData, error: null }
+      }
     } else {
       console.log("Member profile created successfully:", data)
       return { data, error: null }
     }
   } catch (err) {
     console.error("Unexpected error creating member profile:", err)
+    console.error("Error type:", typeof err)
+    console.error("Error stringified:", JSON.stringify(err, null, 2))
     return { data: null, error: err as Error }
   }
 }
@@ -339,4 +408,24 @@ if (typeof window !== 'undefined') {
   (window as any).debugDatabase = debugDatabase
   ;(window as any).testDatabaseInsertion = testDatabaseInsertion
   ;(window as any).testRLSPolicies = testRLSPolicies
+  ;(window as any).testSimpleConnection = async () => {
+    try {
+      console.log("Testing simple connection...")
+      console.log("Service key present:", !!process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY)
+      console.log("Service key starts with:", process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + "...")
+      
+      const { data, error } = await supabaseService.from('members').select('count').limit(1)
+      if (error) {
+        console.error("❌ Connection failed:", error)
+        console.error("Error details:", error)
+        return false
+      } else {
+        console.log("✅ Connection successful:", data)
+        return true
+      }
+    } catch (err) {
+      console.error("❌ Connection error:", err)
+      return false
+    }
+  }
 } 

@@ -15,7 +15,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [userType, setUserType] = useState("member")
   const [isSignIn, setIsSignIn] = useState(false)
-  const [authMethod, setAuthMethod] = useState<'password' | 'otp'>('password')
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -24,7 +24,7 @@ export default function SignUpPage() {
   })
   const [rememberMe, setRememberMe] = useState(false)
   
-  const { signIn, signUp, signInWithOTP, signInWithGoogle, loading, error } = useAuth()
+  const { signIn, signUp, signInWithGoogle, createMemberProfileForUser, loading, error } = useAuth()
   const router = useRouter()
 
   const handleInputChange = (field: string, value: string) => {
@@ -45,76 +45,95 @@ export default function SignUpPage() {
       return
     }
 
-    if (isSignIn && authMethod === 'password' && !formData.password) {
+    if (isSignIn && !formData.password) {
       toast.error("Please enter your password")
       return
     }
 
     try {
       if (isSignIn) {
-        if (authMethod === 'otp') {
-          // OTP Sign In
-          const { error } = await signInWithOTP(formData.email)
-          if (error) {
-            toast.error(error.message)
-          } else {
-            toast.success("OTP sent to your email!")
-            router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`)
+        // Password Sign In
+        console.log("🔐 Signing in with userType:", userType)
+        const { error } = await signIn(formData.email, formData.password, userType as 'member' | 'trainer')
+        if (error) {
+          // Provide better error messages for common scenarios
+          let errorMessage = error.message
+          
+          if (error.message.includes('Invalid login credentials')) {
+            // Check if this might be a Google OAuth account
+            errorMessage = 'Invalid email or password. If you signed up with Google, please use "Continue with Google Account" instead.'
+          } else if (error.message.includes('Email not confirmed')) {
+            errorMessage = 'Please check your email and click the verification link before signing in.'
+          } else if (error.message.includes('User not found')) {
+            errorMessage = 'No account found with this email. Please sign up first or use "Continue with Google Account" if you signed up with Google.'
           }
+          
+          toast.error(errorMessage)
         } else {
-          // Password Sign In
-          console.log("🔐 Signing in with userType:", userType)
-          const { error } = await signIn(formData.email, formData.password, userType as 'member' | 'trainer')
-          if (error) {
-            // Provide better error messages for common scenarios
-            let errorMessage = error.message
-            
-            if (error.message.includes('Invalid login credentials')) {
-              // Check if this might be a Google OAuth account
-              errorMessage = 'Invalid email or password. If you signed up with Google, please use "Continue with Google Account" instead.'
-            } else if (error.message.includes('Email not confirmed')) {
-              errorMessage = 'Please check your email and click the verification link before signing in.'
-            } else if (error.message.includes('User not found')) {
-              errorMessage = 'No account found with this email. Please sign up first or use "Continue with Google Account" if you signed up with Google.'
-            }
-            
-            toast.error(errorMessage)
-          } else {
-            toast.success("Successfully signed in!")
-            router.push("/dashboard") // Redirect to dashboard
-          }
+          toast.success("Successfully signed in!")
+          router.push("/dashboard") // Redirect to dashboard
         }
       } else {
         console.log("📝 Starting sign-up process...")
-        console.log("📝 UserType selected:", userType)
         console.log("📝 Form data:", formData)
-        console.log("🎯 CONFIRMING: Toggle selection is:", userType)
+        console.log("🎯 New account creation - always using 'member' userType")
         
         const signUpData = {
           username: formData.username,
           contact: formData.contact,
-          userType: userType as 'member' | 'trainer',
+          userType: 'member' as const, // Always use member for new sign-ups
           full_name: formData.username, // Use username as full name initially
         }
         
         console.log("📝 Sign-up data being passed:", signUpData)
-        console.log("🎯 userType in signUpData:", signUpData.userType)
-        console.log("✅ CONFIRMED: userType will be passed as:", signUpData.userType)
+        console.log("✅ CONFIRMED: New sign-up will always be created as 'member'")
         
-        const { error } = await signUp(formData.email, formData.password, signUpData)
+        const { data, error } = await signUp(formData.email, formData.password, signUpData)
         if (error) {
           let errorMessage = error.message
           
-          if (error.message.includes('User already registered')) {
-            errorMessage = 'An account with this email already exists. Please sign in instead, or use "Continue with Google Account" if you signed up with Google.'
+          // Handle common sign-up errors with user-friendly messages
+          if (error.message.includes('User already registered') || 
+              error.message.includes('already been registered') ||
+              error.message.includes('already exists')) {
+            errorMessage = 'An account with this email already exists. Please sign in instead.'
+            // Automatically switch to sign-in tab for better UX
+            setTimeout(() => {
+              setIsSignIn(true)
+            }, 2000) // Switch after 2 seconds so user can read the message
+          } else if (error.message.includes('Password should be at least')) {
+            errorMessage = 'Password must be at least 6 characters long.'
+          } else if (error.message.includes('Invalid email')) {
+            errorMessage = 'Please enter a valid email address.'
+          } else if (error.message.includes('Unable to validate email')) {
+            errorMessage = 'Unable to send verification email. Please check your email address and try again.'
           }
           
           console.error("❌ Sign-up error:", error)
           toast.error(errorMessage)
         } else {
           console.log("✅ Sign-up successful!")
+          
+          // Create member profile using the user data from sign-up response
+          const profileResult = await createMemberProfileForUser({
+            username: formData.username,
+            contact: formData.contact,
+            full_name: formData.username,
+            user_id: data.user?.id,
+            email: formData.email,
+          })
+          
+          if (profileResult.error) {
+            console.error("❌ Profile creation failed:", profileResult.error)
+            toast.error("Account created but profile setup failed. Please contact support.")
+          } else {
+            console.log("✅ Profile created successfully")
+            toast.success("Account created successfully! Welcome to ICBF!")
+          }
+          
+          // Redirect to verification page since email confirmation is required
+          console.log("📧 Email confirmation required - redirecting to verification")
           toast.success("Account created successfully! Please check your email to verify your account.")
-          // Redirect to a verification page or show verification instructions
           router.push(`/verification?email=${encodeURIComponent(formData.email)}`)
         }
       }
@@ -164,7 +183,7 @@ export default function SignUpPage() {
           alt="Fitness motivation"
           fill
           className={`object-cover transition-opacity duration-500 ease-in-out ${
-            userType === "member" ? "opacity-100" : "opacity-0"
+            isSignIn ? (userType === "member" ? "opacity-100" : "opacity-0") : "opacity-100"
           }`}
           priority
         />
@@ -173,7 +192,7 @@ export default function SignUpPage() {
           alt="Fitness motivation"
           fill
           className={`object-cover transition-opacity duration-500 ease-in-out ${
-            userType === "trainer" ? "opacity-100" : "opacity-0"
+            isSignIn ? (userType === "trainer" ? "opacity-100" : "opacity-0") : "opacity-0"
           }`}
           priority
         />
@@ -195,74 +214,55 @@ export default function SignUpPage() {
             <p className="text-gray-600 text-sm">
               {isSignIn 
                 ? "Sign in to continue tracking your fitness goals and access your personalized training programs."
-                : "Sign up to track your fitness goals and access personalized training programs."
+                : "Sign up as a member to track your fitness goals and access personalized training programs."
               }
             </p>
-            {isSignIn && (
+
+            {!isSignIn && (
               <p className="text-blue-600 text-xs mt-1">
-                💡 If you signed up with Google, use "Continue with Google Account" instead
+                💡 New accounts are created as members. Trainers can sign in with existing accounts.
               </p>
             )}
             
-            {/* Authentication Method Toggle for Sign In */}
-            {isSignIn && (
-              <div className="flex bg-gray-100 rounded-full p-1 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setAuthMethod('password')}
-                  className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
-                    authMethod === 'password' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAuthMethod('otp')}
-                  className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-colors ${
-                    authMethod === 'otp' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  OTP
-                </button>
-              </div>
-            )}
+
           </div>
 
-          {/* User Type Selection */}
-          <div className="space-y-2">
-            <div className="flex bg-gray-100 rounded-full p-1">
-              <button
-                type="button"
-                onClick={() => {
-                  console.log("🔄 Setting userType to member")
-                  setUserType("member")
-                }}
-                className={`flex-1 py-2 px-6 rounded-full text-sm font-medium transition-colors ${
-                  userType === "member" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Member
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  console.log("🔄 Setting userType to trainer")
-                  setUserType("trainer")
-                }}
-                className={`flex-1 py-2 px-6 rounded-full text-sm font-medium transition-colors ${
-                  userType === "trainer" ? "bg-black text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Trainer
-              </button>
+          {/* User Type Selection - Only for Sign In */}
+          {isSignIn && (
+            <div className="space-y-2">
+              <div className="flex bg-gray-100 rounded-full p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log("🔄 Setting userType to member")
+                    setUserType("member")
+                  }}
+                  className={`flex-1 py-2 px-6 rounded-full text-sm font-medium transition-colors ${
+                    userType === "member" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Member
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log("🔄 Setting userType to trainer")
+                    setUserType("trainer")
+                  }}
+                  className={`flex-1 py-2 px-6 rounded-full text-sm font-medium transition-colors ${
+                    userType === "trainer" ? "bg-black text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Trainer
+                </button>
+              </div>
+              
+              {/* Debug indicator */}
+              <div className="text-xs text-center text-gray-500">
+                Current selection: <span className="font-bold">{userType}</span>
+              </div>
             </div>
-            
-            {/* Debug indicator */}
-            <div className="text-xs text-center text-gray-500">
-              Current selection: <span className="font-bold">{userType}</span>
-            </div>
-          </div>
+          )}
 
           {/* Sign Up Form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
@@ -314,7 +314,7 @@ export default function SignUpPage() {
                 </div>
               )}
 
-              {isSignIn && authMethod === 'password' && (
+              {isSignIn && (
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                     Password
@@ -396,7 +396,7 @@ export default function SignUpPage() {
             >
               {loading ? "Loading..." : (
                 isSignIn 
-                  ? (authMethod === 'otp' ? "Send OTP" : "Sign In")
+                  ? "Sign In"
                   : "Get Started"
               )}
             </Button>

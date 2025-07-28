@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase, createMemberProfile, createTrainerProfile, supabaseService } from '@/lib/supabase'
+import { supabase, createMemberProfile } from '@/lib/supabase'
 import { User, AuthError } from '@supabase/supabase-js'
 
 interface AuthState {
@@ -66,148 +66,17 @@ export function useAuth() {
       return { error }
     }
 
-    // Check if user has a profile in the database, create if not
-    if (data.user) {
-      try {
-        // Check if user exists in members table
-        const { data: memberData } = await supabaseService
-          .from('members')
-          .select('id')
-          .eq('user_id', data.user.id)
-          .single()
-        
-        // Check if user exists in trainers table
-        const { data: trainerData } = await supabaseService
-          .from('trainers')
-          .select('id')
-          .eq('user_id', data.user.id)
-          .single()
-        
-        // Determine user type - prioritize database over metadata
-        let userType = 'member'
-        
-        if (trainerData) {
-          // User exists in trainers table
-          userType = 'trainer'
-        } else if (memberData) {
-          // User exists in members table
-          userType = 'member'
-        } else {
-          // New user - use the selected user type
-          userType = selectedUserType || 'member'
-        }
-        
-        // Update user metadata with the correct userType
-        if (data.user.user_metadata?.userType !== userType) {
-          console.log("Updating user metadata with userType:", userType)
-          const { error: updateError } = await supabase.auth.updateUser({
-            data: { userType: userType }
-          })
-          
-          if (updateError) {
-            console.error("Error updating user metadata:", updateError)
-          } else {
-            console.log("User metadata updated successfully")
-            // Refresh the session to get updated metadata
-            const { data: refreshData } = await supabase.auth.getSession()
-            if (refreshData.session) {
-              console.log("Session refreshed with updated metadata:", refreshData.session.user.user_metadata)
-            }
-          }
-        }
-        
-        // If user doesn't exist in either table, create profile based on userType
-        if (!memberData && !trainerData) {
-          console.log("User doesn't exist in any table, creating new profile")
-          console.log("Creating profile for userType:", userType)
-          
-          const profileData = {
-            user_id: data.user.id,
-            username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'user',
-            email: data.user.email || '',
-            contact: data.user.user_metadata?.contact || '',
-            full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'User',
-          }
-          
-          console.log("Profile data to create:", profileData)
-          
-          let profileCreated = false
-          
-          if (userType === 'trainer') {
-            console.log("Creating trainer profile...")
-            const result = await createTrainerProfile(profileData)
-            if (result.error) {
-              console.error("Failed to create trainer profile:", result.error)
-            } else {
-              console.log('Created trainer profile for sign-in user:', result.data)
-              profileCreated = true
-            }
-          } else {
-            console.log("Creating member profile...")
-            const result = await createMemberProfile(profileData)
-            if (result.error) {
-              console.error("Failed to create member profile:", result.error)
-            } else {
-              console.log('Created member profile for sign-in user:', result.data)
-              profileCreated = true
-            }
-          }
-          
-          // If profile creation failed, try one more time with different approach
-          if (!profileCreated) {
-            console.log("Profile creation failed, trying alternative approach...")
-            try {
-              // Try direct insertion without the wrapper function
-              const { data: directData, error: directError } = await supabaseService
-                .from(userType === 'trainer' ? 'trainers' : 'members')
-                .insert({
-                  user_id: profileData.user_id,
-                  username: profileData.username,
-                  email: profileData.email,
-                  contact: profileData.contact,
-                  full_name: profileData.full_name,
-                  join_date: new Date().toISOString(),
-                  ...(userType === 'trainer' ? {
-                    specialization: [],
-                    hourly_rate: 50,
-                    experience_years: 0,
-                    rating: 0,
-                    total_reviews: 0,
-                    total_clients: 0,
-                    active_clients: 0,
-                    total_sessions: 0,
-                    is_verified: false,
-                    is_available: true,
-                  } : {
-                    total_workouts: 0,
-                    current_streak: 0,
-                    longest_streak: 0,
-                    total_calories_burned: 0,
-                  })
-                })
-                .select()
-                .single()
-              
-              if (directError) {
-                console.error("Direct insertion also failed:", directError)
-              } else {
-                console.log("Direct insertion succeeded:", directData)
-                profileCreated = true
-              }
-            } catch (directErr) {
-              console.error("Direct insertion error:", directErr)
-            }
-          }
-          
-          if (!profileCreated) {
-            console.error("All profile creation attempts failed!")
-          }
-        } else {
-          console.log("User already has a profile in database")
-        }
-      } catch (profileError) {
-        console.error('Error checking/creating profile:', profileError)
-        // Don't fail the signin if profile creation fails
+    // Update user metadata with the selected user type if provided
+    if (data.user && selectedUserType && data.user.user_metadata?.userType !== selectedUserType) {
+      console.log("Updating user metadata with userType:", selectedUserType)
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { userType: selectedUserType }
+      })
+      
+      if (updateError) {
+        console.error("Error updating user metadata:", updateError)
+      } else {
+        console.log("User metadata updated successfully")
       }
     }
 
@@ -230,11 +99,9 @@ export function useAuth() {
     
     console.log("📝 SignUp called with userType:", userData?.userType)
     console.log("📝 Full userData:", userData)
-    console.log("✅ CONFIRMED: SignUp received userType:", userData?.userType)
     
     const userType = userData?.userType || 'member'
     console.log("🎯 Final userType for signup:", userType)
-    console.log("✅ CONFIRMED: SignUp will use userType:", userType)
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -260,119 +127,6 @@ export function useAuth() {
 
     console.log("✅ SignUp successful, user data:", data.user)
     console.log("📧 User metadata after signup:", data.user?.user_metadata)
-    console.log("✅ CONFIRMED: Email redirect URL includes userType:", userType)
-
-    // Create profile in appropriate table based on user type
-    if (data.user && userData) {
-      try {
-        console.log("🆕 Creating profile for user:", data.user.id)
-        console.log("🎯 UserType for profile creation:", userType)
-        console.log("✅ CONFIRMED: Profile will be created as:", userType)
-        
-        const profileData = {
-          user_id: data.user.id,
-          username: userData.username || '',
-          email: email,
-          contact: userData.contact || '',
-          full_name: userData.full_name || userData.username || '',
-        }
-
-        console.log("📝 Profile data:", profileData)
-
-        if (userType === 'trainer') {
-          console.log("🏋️ Creating trainer profile...")
-          console.log("✅ CONFIRMED: Creating TRAINER profile as selected")
-          const result = await createTrainerProfile(profileData)
-          if (result.error) {
-            console.error("❌ Failed to create trainer profile:", result.error)
-            // Try direct insertion as fallback
-            console.log("🔄 Trying direct trainer insertion...")
-            const { data: directData, error: directError } = await supabaseService
-              .from('trainers')
-              .insert({
-                user_id: profileData.user_id,
-                username: profileData.username,
-                email: profileData.email,
-                contact: profileData.contact,
-                full_name: profileData.full_name,
-                date_of_birth: null,
-                gender: null,
-                specialization: [],
-                certifications: [],
-                experience_years: 0,
-                bio: null,
-                hourly_rate: 50,
-                rating: 0,
-                total_reviews: 0,
-                total_clients: 0,
-                active_clients: 0,
-                total_sessions: 0,
-                join_date: new Date().toISOString(),
-                is_verified: false,
-                is_available: true,
-                working_hours: null,
-                location: null,
-              })
-              .select()
-              .single()
-            
-            if (directError) {
-              console.error("❌ Direct trainer insertion also failed:", directError)
-            } else {
-              console.log("✅ Direct trainer insertion succeeded:", directData)
-            }
-          } else {
-            console.log("✅ Trainer profile created successfully:", result.data)
-          }
-        } else {
-          console.log("👤 Creating member profile...")
-          console.log("✅ CONFIRMED: Creating MEMBER profile as selected")
-          const result = await createMemberProfile(profileData)
-          if (result.error) {
-            console.error("❌ Failed to create member profile:", result.error)
-            // Try direct insertion as fallback
-            console.log("🔄 Trying direct member insertion...")
-            const { data: directData, error: directError } = await supabaseService
-              .from('members')
-              .insert({
-                user_id: profileData.user_id,
-                username: profileData.username,
-                email: profileData.email,
-                contact: profileData.contact,
-                full_name: profileData.full_name,
-                date_of_birth: null,
-                gender: null,
-                height: null,
-                weight: null,
-                fitness_goals: null,
-                experience_level: null,
-                medical_conditions: null,
-                emergency_contact: null,
-                membership_type: 'basic',
-                join_date: new Date().toISOString(),
-                last_workout: null,
-                total_workouts: 0,
-                current_streak: 0,
-                longest_streak: 0,
-                total_calories_burned: 0,
-              })
-              .select()
-              .single()
-            
-            if (directError) {
-              console.error("❌ Direct member insertion also failed:", directError)
-            } else {
-              console.log("✅ Direct member insertion succeeded:", directData)
-            }
-          } else {
-            console.log("✅ Member profile created successfully:", result.data)
-          }
-        }
-      } catch (profileError) {
-        console.error('❌ Error creating profile:', profileError)
-        // Don't fail the signup if profile creation fails
-      }
-    }
 
     setAuthState(prev => ({
       ...prev,
@@ -429,148 +183,17 @@ export function useAuth() {
       return { error }
     }
 
-    // Check if user has a profile in the database, create if not
-    if (data.user) {
-      try {
-        // Check if user exists in members table
-        const { data: memberData } = await supabaseService
-          .from('members')
-          .select('id')
-          .eq('user_id', data.user.id)
-          .single()
-        
-        // Check if user exists in trainers table
-        const { data: trainerData } = await supabaseService
-          .from('trainers')
-          .select('id')
-          .eq('user_id', data.user.id)
-          .single()
-        
-        // Determine user type - prioritize database over metadata
-        let userType = 'member'
-        
-        if (trainerData) {
-          // User exists in trainers table
-          userType = 'trainer'
-        } else if (memberData) {
-          // User exists in members table
-          userType = 'member'
-        } else {
-          // New user - use the selected user type
-          userType = selectedUserType || 'member'
-        }
-        
-        // Update user metadata with the correct userType
-        if (data.user.user_metadata?.userType !== userType) {
-          console.log("Updating user metadata with userType:", userType)
-          const { error: updateError } = await supabase.auth.updateUser({
-            data: { userType: userType }
-          })
-          
-          if (updateError) {
-            console.error("Error updating user metadata:", updateError)
-          } else {
-            console.log("User metadata updated successfully")
-            // Refresh the session to get updated metadata
-            const { data: refreshData } = await supabase.auth.getSession()
-            if (refreshData.session) {
-              console.log("Session refreshed with updated metadata:", refreshData.session.user.user_metadata)
-            }
-          }
-        }
-        
-        // If user doesn't exist in either table, create profile based on userType
-        if (!memberData && !trainerData) {
-          console.log("User doesn't exist in any table, creating new profile")
-          console.log("Creating profile for userType:", userType)
-          
-          const profileData = {
-            user_id: data.user.id,
-            username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'user',
-            email: data.user.email || '',
-            contact: data.user.user_metadata?.contact || '',
-            full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'User',
-          }
-          
-          console.log("Profile data to create:", profileData)
-          
-          let profileCreated = false
-          
-          if (userType === 'trainer') {
-            console.log("Creating trainer profile...")
-            const result = await createTrainerProfile(profileData)
-            if (result.error) {
-              console.error("Failed to create trainer profile:", result.error)
-            } else {
-              console.log('Created trainer profile for OTP user:', result.data)
-              profileCreated = true
-            }
-          } else {
-            console.log("Creating member profile...")
-            const result = await createMemberProfile(profileData)
-            if (result.error) {
-              console.error("Failed to create member profile:", result.error)
-            } else {
-              console.log('Created member profile for OTP user:', result.data)
-              profileCreated = true
-            }
-          }
-          
-          // If profile creation failed, try one more time with different approach
-          if (!profileCreated) {
-            console.log("Profile creation failed, trying alternative approach...")
-            try {
-              // Try direct insertion without the wrapper function
-              const { data: directData, error: directError } = await supabaseService
-                .from(userType === 'trainer' ? 'trainers' : 'members')
-                .insert({
-                  user_id: profileData.user_id,
-                  username: profileData.username,
-                  email: profileData.email,
-                  contact: profileData.contact,
-                  full_name: profileData.full_name,
-                  join_date: new Date().toISOString(),
-                  ...(userType === 'trainer' ? {
-                    specialization: [],
-                    hourly_rate: 50,
-                    experience_years: 0,
-                    rating: 0,
-                    total_reviews: 0,
-                    total_clients: 0,
-                    active_clients: 0,
-                    total_sessions: 0,
-                    is_verified: false,
-                    is_available: true,
-                  } : {
-                    total_workouts: 0,
-                    current_streak: 0,
-                    longest_streak: 0,
-                    total_calories_burned: 0,
-                  })
-                })
-                .select()
-                .single()
-              
-              if (directError) {
-                console.error("Direct insertion also failed:", directError)
-              } else {
-                console.log("Direct insertion succeeded:", directData)
-                profileCreated = true
-              }
-            } catch (directErr) {
-              console.error("Direct insertion error:", directErr)
-            }
-          }
-          
-          if (!profileCreated) {
-            console.error("All profile creation attempts failed!")
-          }
-        } else {
-          console.log("User already has a profile in database")
-        }
-      } catch (profileError) {
-        console.error('Error checking/creating profile:', profileError)
-        // Don't fail the OTP verification if profile creation fails
+    // Update user metadata with the selected user type if provided
+    if (data.user && selectedUserType && data.user.user_metadata?.userType !== selectedUserType) {
+      console.log("Updating user metadata with userType:", selectedUserType)
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { userType: selectedUserType }
+      })
+      
+      if (updateError) {
+        console.error("Error updating user metadata:", updateError)
+      } else {
+        console.log("User metadata updated successfully")
       }
     }
 
@@ -611,12 +234,50 @@ export function useAuth() {
     return { success: true }
   }
 
+  const createMemberProfileForUser = async (userData: {
+    username?: string
+    contact?: string
+    full_name?: string
+    user_id?: string
+    email?: string
+  }) => {
+    const userId = userData.user_id || authState.user?.id
+    const userEmail = userData.email || authState.user?.email
+    
+    if (!userId) {
+      console.error("No user ID found")
+      return { error: new Error("No user ID found") }
+    }
+
+    try {
+      console.log("🆕 Creating member profile for user:", userId)
+      
+      const profileData = {
+        user_id: userId,
+        username: userData.username || '',
+        email: userEmail || '',
+        contact: userData.contact || '',
+        full_name: userData.full_name || userData.username || '',
+      }
+
+      console.log("📝 Profile data:", profileData)
+
+      const result = await createMemberProfile(profileData)
+      if (result.error) {
+        console.error("❌ Failed to create member profile:", result.error)
+        return { error: result.error }
+      } else {
+        console.log("✅ Member profile created successfully:", result.data)
+        return { data: result.data }
+      }
+    } catch (profileError) {
+      console.error('❌ Error creating member profile:', profileError)
+      return { error: profileError as Error }
+    }
+  }
+
   const signInWithGoogle = async (userType?: 'member' | 'trainer') => {
-    console.log("🔐 ===== SIGNINWITHGOOGLE FUNCTION START =====")
-    console.log("📥 Received userType parameter:", userType)
-    console.log("📥 userType type:", typeof userType)
-    console.log("📥 userType value:", userType)
-    console.log("🎯 Starting Google OAuth sign-in with userType:", userType)
+    console.log("🔐 Starting Google OAuth sign-in with userType:", userType)
     setAuthState(prev => ({ ...prev, loading: true, error: null }))
     
     const finalUserType = userType || 'member'
@@ -624,10 +285,7 @@ export function useAuth() {
     
     const redirectUrl = `${window.location.origin}/auth/oauth-callback?userType=${finalUserType}`
     console.log("🔗 Redirect URL:", redirectUrl)
-    console.log("🔗 URL contains userType:", redirectUrl.includes('userType='))
-    console.log("🔗 URL userType value:", redirectUrl.split('userType=')[1])
     
-    console.log("🔐 ===== CALLING SUPABASE OAUTH =====")
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -638,11 +296,6 @@ export function useAuth() {
         },
       },
     })
-
-    console.log("🔐 ===== SUPABASE OAUTH RESPONSE =====")
-    console.log("📊 OAuth response data:", data)
-    console.log("❌ OAuth response error:", error)
-    console.log("🎯 OAuth redirect URL used:", redirectUrl)
 
     if (error) {
       console.error("❌ Google OAuth error:", error)
@@ -655,8 +308,6 @@ export function useAuth() {
     }
 
     console.log("✅ Google OAuth initiated successfully")
-    console.log("✅ CONFIRMED: OAuth will redirect to:", redirectUrl)
-    console.log("🔐 ===== SIGNINWITHGOOGLE FUNCTION END =====")
     return { data }
   }
 
@@ -670,5 +321,6 @@ export function useAuth() {
     verifyOTP,
     signOut,
     signInWithGoogle,
+    createMemberProfileForUser,
   }
 } 
