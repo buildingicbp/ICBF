@@ -238,7 +238,7 @@ export default function LandingPage() {
                       className="w-full border-2 border-[#1F509A] text-[#1F509A] hover:bg-[#1F509A] hover:text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 bg-white shadow-md hover:shadow-lg transition-all duration-200"
                     >
                       <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-                      Connect With Trainer
+                      Become coach at ICBF
                     </Button>
                   </Link>
                   <p className="text-xs sm:text-sm text-[#1F509A] text-center">(for personalized plans)</p>

@@ -12,10 +12,12 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 
+
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [userType, setUserType] = useState("member")
   const [isSignIn, setIsSignIn] = useState(false)
+
 
   const [formData, setFormData] = useState({
     email: "",
@@ -168,10 +170,7 @@ export default function SignUpPage() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    toast.info("Google OAuth coming soon! Please use email sign-in for now.")
-    return
-  }
+
 
   // Show error toast when auth error occurs
   useEffect(() => {
@@ -426,15 +425,14 @@ export default function SignUpPage() {
               )}
             </Button>
 
-            {/* Continue with Google */}
+            {/* Admin Panel Button */}
             <Button
               type="button"
-              onClick={handleGoogleSignIn}
+              onClick={() => router.push('/admin-login')}
               className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 py-3 rounded-full flex items-center justify-center space-x-2 transition-colors"
               disabled={loading}
             >
-              {/* <Image src="/Sign.png" alt="Google" width={20} height={20} /> */}
-              <span>Coming Soon</span>
+              <span>Admin Panel</span>
             </Button>
           </form>
 
@@ -456,6 +454,8 @@ export default function SignUpPage() {
           </div>
         </div>
       </div>
+
+
     </div>
   )
 }
