@@ -420,7 +420,7 @@ export default function SignUpPage() {
             >
               {loading ? "Loading..." : (
                 isSignIn 
-                  ? "Sign In"
+                  ? "Signup"
                   : "Get Started"
               )}
             </Button>

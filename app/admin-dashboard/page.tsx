@@ -93,9 +93,10 @@ interface Trainer {
 }
 
 export default function AdminDashboardPage() {
-  const { user, loading, signOut } = useAuth()
+  const { signOut } = useAuth()
   const router = useRouter()
   
+  const [adminUser, setAdminUser] = useState<any>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [trainers, setTrainers] = useState<Trainer[]>([])
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
@@ -119,33 +120,31 @@ export default function AdminDashboardPage() {
   }, [])
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/signin")
-      return
-    }
-
-    if (!loading && user) {
-      const userEmail = user.email?.toLowerCase()
-      
-      // Only allow icanbefitter@gmail.com to access admin dashboard
-      if (userEmail !== 'icanbefitter@gmail.com') {
-        // Redirect based on user type
-        const userType = user.user_metadata?.userType || 'member'
-        if (userType === 'trainer') {
-          router.push("/trainer-dashboard")
-        } else {
-          router.push("/member-dashboard")
+    // Check for admin session in localStorage
+    const adminSession = localStorage.getItem('adminSession')
+    
+    if (adminSession) {
+      try {
+        const session = JSON.parse(adminSession)
+        if (session.isAdmin && session.user.email === 'icanbefitter@gmail.com') {
+          // Admin session exists and is valid
+          setAdminUser(session.user)
+          return
         }
-        return
+      } catch (error) {
+        console.error('Error parsing admin session:', error)
       }
     }
-  }, [user, loading, router])
+    
+    // If no valid admin session, redirect to admin login
+    router.push("/admin-login")
+  }, [router])
 
   useEffect(() => {
-    if (user?.email === 'icanbefitter@gmail.com' && supabase) {
+    if (adminUser?.email === 'icanbefitter@gmail.com' && supabase) {
       fetchAllData()
     }
-  }, [user, supabase])
+  }, [adminUser, supabase])
 
   useEffect(() => {
     // Filter data based on search term
@@ -212,8 +211,10 @@ export default function AdminDashboardPage() {
   }
 
   const handleSignOut = async () => {
-    await signOut()
-    // No need for manual redirect - signOut function handles it
+    // Clear admin session
+    localStorage.removeItem('adminSession')
+    setAdminUser(null)
+    router.push('/admin-login')
   }
 
   const getStats = () => {
@@ -238,7 +239,7 @@ export default function AdminDashboardPage() {
 
   const stats = getStats()
 
-  if (loading || dataLoading) {
+  if (dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -249,7 +250,7 @@ export default function AdminDashboardPage() {
     )
   }
 
-  if (!user) {
+  if (!adminUser) {
     return null
   }
 
@@ -270,7 +271,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center space-x-2">
                 <Shield className="w-4 h-4 text-red-600" />
                 <span className="text-sm text-gray-700">
-                  {user.email} (Admin)
+                  {adminUser.email} (Admin)
                 </span>
               </div>
               

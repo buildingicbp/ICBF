@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Manrope } from 'next/font/google'
 import './globals.css'
 import ConditionalChatbot from '@/components/conditional-chatbot'
+import ConditionalNavbar from '@/components/conditional-navbar'
 import { Toaster } from 'sonner'
 
 const manrope = Manrope({ subsets: ['latin'] })
@@ -20,7 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={manrope.className}>
-        {children}
+        <ConditionalNavbar />
+        <main>
+          {children}
+        </main>
         <ConditionalChatbot />
         <Toaster />
       </body>

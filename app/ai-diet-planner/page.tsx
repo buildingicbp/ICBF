@@ -79,26 +79,13 @@ export default function AIDietPlannerPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Image src="/logo.png" alt="ICBF Logo" width={120} height={40} />
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-900">AI Diet Planner</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/signin">
-                <Button variant="outline">Sign In</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Diet Planner</h1>
+          <p className="text-gray-600">Get your personalized nutrition plan powered by AI</p>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Form */}
           <div className="space-y-6">

@@ -130,42 +130,6 @@ export default function BlogsPage() {
 
   return (
     <div className="bg-white min-h-screen">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b">
-        <div className="flex items-center pl-32">
-          <Link href="/">
-            <Image src="/logo.png" alt="ICBF Logo" width={80} height={40} className="h-8 w-auto" />
-          </Link>
-        </div>
-
-        <nav className="hidden md:flex items-center space-x-8">
-          <Link href="/" className="text-black hover:text-slate-700 font-semibold">
-            Home
-          </Link>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
-            Learn
-          </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
-            Services
-          </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
-            Work with Us
-          </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
-            Store
-          </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold">
-            Contact
-          </a>
-        </nav>
-
-        <div className="flex items-center pr-32">
-          <Link href="/signin">
-            <Button className="bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-6 py-2 rounded-full">Login</Button>
-          </Link>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-[#1F509A] to-[#2a5bb8] text-white py-20">
         <div className="container mx-auto px-4 text-center">

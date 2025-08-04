@@ -34,20 +34,38 @@ export default function AdminLoginPage() {
     setLoading(true)
     
     try {
+      // Hardcoded admin credentials
+      const ADMIN_EMAIL = 'icanbefitter@gmail.com'
+      const ADMIN_PASSWORD = 'AbXyz@123'
+      
       // Check if it's the admin email
-      if (credentials.email.toLowerCase() !== 'icanbefitter@gmail.com') {
+      if (credentials.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
         toast.error("Access denied. Admin credentials required.")
         return
       }
 
-      // Sign in with admin credentials
-      const { error } = await signIn(credentials.email, credentials.password, 'member')
-      
-      if (error) {
+      // Check if password matches
+      if (credentials.password !== ADMIN_PASSWORD) {
         toast.error("Invalid admin credentials")
         return
       }
 
+      // Create a mock admin session in localStorage
+      const adminSession = {
+        user: {
+          id: 'admin-user-id',
+          email: ADMIN_EMAIL,
+          user_metadata: {
+            userType: 'admin'
+          }
+        },
+        isAdmin: true
+      }
+      
+      // Store admin session
+      localStorage.setItem('adminSession', JSON.stringify(adminSession))
+      
+      // Admin credentials are valid - proceed to dashboard
       toast.success("Admin access granted!")
       router.push('/admin-dashboard')
       

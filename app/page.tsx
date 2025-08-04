@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { User, Zap, Star, MessageCircle, Utensils, Dumbbell, Moon, Calendar, Lock, Sparkles, ArrowRight, Menu, X } from "lucide-react"
+import { User, Zap, Star, MessageCircle, Utensils, Dumbbell, Moon, Calendar, Lock, Sparkles, ArrowRight } from "lucide-react"
 import DietPlanModal from "@/components/diet-plan-modal"
 import { useScrollModal } from "@/hooks/use-scroll-modal"
 import DietPlanPopupModal from "@/components/diet-plan-popup-modal"
@@ -19,7 +19,6 @@ import { supabase } from "@/lib/supabase"
 export default function LandingPage() {
   const { showModal, closeModal } = useScrollModal()
   const { showPopup, closePopup } = useDietPlanPopup()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -87,115 +86,6 @@ export default function LandingPage() {
 
   return (
     <div className="bg-white" style={{ transform: 'scale(0.9)', transformOrigin: 'top center', margin: '0', padding: '0', minHeight: '100vh' }}>
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 sm:px-6 py-4 bg-white/80 backdrop-blur-sm relative z-50">
-        {/* Logo Container */}
-        <div className="flex items-center pl-4 sm:pl-8 lg:pl-32">
-          <Image src="/logo.png" alt="ICBF Logo" width={80} height={40} className="h-6 sm:h-8 w-auto" />
-        </div>
-
-        {/* Center Navigation - Desktop */}
-        <nav className="hidden lg:flex items-center space-x-8">
-          <Link href="/blogs" className="text-black hover:text-slate-700 font-semibold transition-colors">
-            Learn
-          </Link>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
-            Services
-          </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
-            Work with Us
-          </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
-            Store
-          </a>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors">
-            Contact
-          </a>
-        </nav>
-
-        {/* Action Buttons Container - Desktop */}
-        <div className="hidden md:flex items-center gap-2 lg:gap-4 pr-4 sm:pr-8 lg:pr-32">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2">
-            <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Book a Free Consultation</span>
-            <span className="sm:hidden">Consultation</span>
-          </Button>
-          <Link href="/signin">
-            <Button variant="outline" className="border-gray-300 text-[#1F509A] hover:bg-gray-50 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2">
-              <span className="hidden sm:inline">Login As</span>
-              <span className="sm:hidden">Login</span>
-              <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Button>
-          </Link>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          aria-label="Toggle mobile menu"
-        >
-          {isMobileMenuOpen ? (
-            <X className="w-6 h-6 text-gray-700" />
-          ) : (
-            <Menu className="w-6 h-6 text-gray-700" />
-          )}
-        </button>
-      </header>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-white/95 backdrop-blur-sm">
-          <div className="flex flex-col h-full">
-            {/* Mobile Menu Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <Image src="/logo.png" alt="ICBF Logo" width={80} height={40} className="h-8 w-auto" />
-              <button
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <X className="w-6 h-6 text-gray-700" />
-              </button>
-            </div>
-
-            {/* Mobile Navigation */}
-            <nav className="flex-1 px-4 py-8">
-              <div className="space-y-6">
-                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-                  Learn
-                </a>
-                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-                  Services
-                </a>
-                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-                  Work with Us
-                </a>
-                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-                  Store
-                </a>
-                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-                  Contact
-                </a>
-              </div>
-            </nav>
-
-            {/* Mobile Action Buttons */}
-            <div className="p-4 space-y-4 border-t border-gray-200">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-medium flex items-center justify-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                Book a Free Consultation
-              </Button>
-              <Link href="/signin" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full border-gray-300 text-[#1F509A] hover:bg-gray-50 py-3 rounded-full font-medium flex items-center justify-center gap-2">
-                  Login As
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center">
@@ -238,16 +128,16 @@ export default function LandingPage() {
                       className="w-full border-2 border-[#1F509A] text-[#1F509A] hover:bg-[#1F509A] hover:text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 bg-white shadow-md hover:shadow-lg transition-all duration-200"
                     >
                       <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-                      Become coach at ICBF
+                      Become a coach
                     </Button>
                   </Link>
-                  <p className="text-xs sm:text-sm text-[#1F509A] text-center">(for personalized plans)</p>
+                  {/* <p className="text-xs sm:text-sm text-[#1F509A] text-center">(for personalized plans)</p> */}
                 </div>
               </div>
             </div>
 
             {/* Trust Indicator */}
-            <div className="pt-4 flex justify-center">
+            {/* <div className="pt-4 flex justify-center">
               <Image
                 src="/trust.png"
                 alt="Trusted by 30+ fitness coaches"
@@ -255,7 +145,7 @@ export default function LandingPage() {
                 height={60}
                 className="w-auto h-10 sm:h-12 lg:h-14 max-w-full"
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Right Image */}
@@ -451,6 +341,174 @@ export default function LandingPage() {
               height={500}
               className="w-full h-96 object-cover hover:scale-105 transition-transform duration-300"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Latest Blogs Section */}
+      <section className="bg-gray-50 py-16">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">
+              Latest from Our Blog
+            </h2>
+            <p className="text-slate-600 text-lg">Expert insights and tips to help you on your fitness journey</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {/* Blog Post 1 */}
+            <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              <div className="relative h-48">
+                <Image
+                  src="/placeholder.jpg"
+                  alt="Fitness Blueprint for Complete Beginners"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="bg-[#1F509A] text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Beginner Guide
+                  </span>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    ICANBEFITTER
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    April 6, 2019
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                  Fitness Blueprint for Complete Beginners!
+                </h3>
+                
+                <p className="text-gray-600 mb-4 line-clamp-3">
+                  According to most of us, getting Fit means inclusion of one or more of the following. Read their lacunae. Leg Intensive Cardio, Dieting, and Gym workout. Learn the step-by-step process to start your fitness journey properly.
+                </p>
+                
+                <Link href="/blogs/fitness-blueprint-beginners">
+                  <Button 
+                    variant="ghost" 
+                    className="text-[#1F509A] hover:text-[#1a4a8a] p-0 h-auto font-semibold flex items-center gap-2"
+                  >
+                    Read More
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </article>
+
+            {/* Blog Post 2 */}
+            <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              <div className="relative h-48">
+                <Image
+                  src="/placeholder.jpg"
+                  alt="ICANBEFITTER - It's Time to Love the Person in the Mirror"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="bg-[#1F509A] text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Motivation
+                  </span>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    ICANBEFITTER
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    March 2019
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                  ICANBEFITTER - It's Time to Love the Person in the Mirror
+                </h3>
+                
+                <p className="text-gray-600 mb-4 line-clamp-3">
+                  Becoming Fit is a Consequence of our Lifestyle! We see around us unfit people prone to lifestyle diseases, struggling to carry out their day to day activities. Learn how small incremental changes can make you fitter, both physically and mentally.
+                </p>
+                
+                <Link href="/blogs/icanbefitter-home">
+                  <Button 
+                    variant="ghost" 
+                    className="text-[#1F509A] hover:text-[#1a4a8a] p-0 h-auto font-semibold flex items-center gap-2"
+                  >
+                    Read More
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </article>
+
+            {/* Blog Post 3 */}
+            <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              <div className="relative h-48">
+                <Image
+                  src="/placeholder.jpg"
+                  alt="Nutrition Myths Debunked"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="bg-[#1F509A] text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Nutrition
+                  </span>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    Nutrition Expert
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    March 5, 2024
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                  Nutrition Myths Debunked
+                </h3>
+                
+                <p className="text-gray-600 mb-4 line-clamp-3">
+                  Separating fact from fiction in the world of nutrition. Learn what really works for fat loss, muscle gain, and overall health.
+                </p>
+                
+                <Link href="/blogs/nutrition-myths-debunked">
+                  <Button 
+                    variant="ghost" 
+                    className="text-[#1F509A] hover:text-[#1a4a8a] p-0 h-auto font-semibold flex items-center gap-2"
+                  >
+                    Read More
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </article>
+          </div>
+
+          {/* View All Blogs Button */}
+          <div className="text-center mt-12">
+            <Link href="/blogs">
+              <Button className="bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-8 py-3 rounded-full font-semibold flex items-center gap-2 mx-auto">
+                View All Blogs
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
