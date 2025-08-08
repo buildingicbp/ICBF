@@ -25,9 +25,15 @@ export default function Navbar() {
            <Link href="/blogs" className="text-black hover:text-slate-700 font-semibold transition-colors text-sm">
              Learn
            </Link>
+<<<<<<< HEAD
                        <Link href="/services" className="text-black hover:text-slate-700 font-semibold transition-colors text-sm">
               Services
             </Link>
+=======
+           <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors text-sm">
+             Services
+           </a>
+>>>>>>> origin/main
            <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors text-sm">
              Work with Us
            </a>
@@ -44,6 +50,7 @@ export default function Navbar() {
 
                  {/* Action Buttons Container - Desktop */}
          <div className="hidden md:flex items-center gap-2 lg:gap-3 pr-2 sm:pr-4 lg:pr-16">
+<<<<<<< HEAD
            <a href="https://calendly.com/icanbefitter/30min" target="_blank" rel="noopener noreferrer">
              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
                <MessageCircle className="w-3 h-3" />
@@ -51,6 +58,13 @@ export default function Navbar() {
                <span className="sm:hidden">Consultation</span>
              </Button>
            </a>
+=======
+           <Button className="bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
+             <MessageCircle className="w-3 h-3" />
+             <span className="hidden sm:inline">Book a Free Consultation</span>
+             <span className="sm:hidden">Consultation</span>
+           </Button>
+>>>>>>> origin/main
            <Link href="/signin">
              <Button variant="outline" className="border-gray-300 text-[#1F509A] hover:bg-gray-50 px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
                <span className="hidden sm:inline">Signup As</span>
@@ -97,9 +111,15 @@ export default function Navbar() {
                   <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                     Learn
                   </a>
+<<<<<<< HEAD
                   <Link href="/services" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                     Services
                   </Link>
+=======
+                  <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                    Services
+                  </a>
+>>>>>>> origin/main
                   <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                     Work with Us
                   </a>
@@ -117,12 +137,19 @@ export default function Navbar() {
 
             {/* Mobile Action Buttons */}
             <div className="p-4 space-y-4 border-t border-gray-200">
+<<<<<<< HEAD
               <a href="https://calendly.com/icanbefitter/30min" target="_blank" rel="noopener noreferrer" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-medium flex items-center justify-center gap-2">
                   <MessageCircle className="w-5 h-5" />
                   Book a Free Consultation
                 </Button>
               </a>
+=======
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full font-medium flex items-center justify-center gap-2">
+                <MessageCircle className="w-5 h-5" />
+                Book a Free Consultation
+              </Button>
+>>>>>>> origin/main
               <Link href="/signin" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button variant="outline" className="w-full border-gray-300 text-[#1F509A] hover:bg-gray-50 py-3 rounded-full font-medium flex items-center justify-center gap-2">
                   Signup As
