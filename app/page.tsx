@@ -1,0 +1,828 @@
+"use client"
+
+import Image from "next/image"
+import Link from "next/link"
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { User, Zap, Star, MessageCircle, Utensils, Dumbbell, Moon, Calendar, Lock, Sparkles, ArrowRight } from "lucide-react"
+import DietPlanModal from "@/components/diet-plan-modal"
+import { useScrollModal } from "@/hooks/use-scroll-modal"
+import DietPlanPopupModal from "@/components/diet-plan-popup-modal"
+import { useDietPlanPopup } from "@/hooks/use-diet-plan-popup"
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+
+
+export default function LandingPage() {
+  const { showModal, closeModal } = useScrollModal()
+  const { showPopup, closePopup } = useDietPlanPopup()
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  // Redirect authenticated users to their dashboard
+  useEffect(() => {
+    const handleRedirect = async () => {
+      if (!loading && user) {
+        // Force refresh session to get latest metadata
+        const { data: sessionData } = await supabase.auth.getSession()
+        const currentUser = sessionData.session?.user || user
+        
+        console.log("Landing page - Current user metadata:", currentUser.user_metadata)
+        
+        const userType = currentUser.user_metadata?.userType || 'member'
+        const userEmail = currentUser.email?.toLowerCase()
+        
+        console.log("Landing page - User type from metadata:", userType)
+        console.log("Landing page - User email:", userEmail)
+        console.log("Landing page - Full user metadata:", currentUser.user_metadata)
+        
+        // Check if user is admin
+        if (userEmail === 'icanbefitter@gmail.com') {
+          router.push("/admin-dashboard")
+          return
+        }
+        
+        // If no userType in metadata, default to member
+        if (!currentUser.user_metadata?.userType) {
+          console.log("No userType in metadata, defaulting to member")
+        }
+        
+        // Redirect to role-specific dashboard based on metadata
+        if (userType === 'trainer') {
+          router.push("/trainer-dashboard")
+        } else {
+          router.push("/member-dashboard")
+        }
+      }
+    }
+
+    // Add a small delay to ensure session is fully loaded
+    const timer = setTimeout(() => {
+      handleRedirect()
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [user, loading, router])
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render the landing page if user is authenticated
+  if (user) {
+    return null
+  }
+
+  return (
+    <div className="bg-white" style={{ transform: 'scale(0.9)', transformOrigin: 'top center', margin: '0', padding: '0', minHeight: '100vh' }}>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center">
+          {/* Left Content */}
+          <div className="space-y-6 sm:space-y-8 text-center">
+            <div className="space-y-4 sm:space-y-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-[#1F509A] leading-tight">
+                It's Time To Love
+                <br />
+                The Person In
+                <br />
+                The Mirror
+              </h1>
+
+              <div className="space-y-4">
+                <p className="text-base sm:text-lg lg:text-xl text-slate-700 leading-relaxed">
+                  We Don't Just Give Workouts. We Help You Build
+                  <br className="hidden sm:block" />
+                  Habits, Follow A Structured Path, And Stay
+                  <br className="hidden sm:block" />
+                  Consistent — <span className="text-[#1F509A] font-semibold">For Real Change</span>.
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-4 flex flex-col items-center">
+              <div className="flex flex-col gap-4 w-full max-w-sm">
+                <Link href="/signin" className="w-full">
+                  <Button className="w-full bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200">
+                    <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                    I Want To Get Fit
+                  </Button>
+                </Link>
+
+                <div className="flex flex-col gap-2">
+                  <Link href="/signin" className="w-full">
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-[#1F509A] text-[#1F509A] hover:bg-[#1F509A] hover:text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 bg-white shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+                      Become a coach
+                    </Button>
+                  </Link>
+                  {/* <p className="text-xs sm:text-sm text-[#1F509A] text-center">(for personalized plans)</p> */}
+                </div>
+              </div>
+            </div>
+
+            {/* Trust Indicator */}
+            {/* <div className="pt-4 flex justify-center">
+              <Image
+                src="/trust.png"
+                alt="Trusted by 30+ fitness coaches"
+                width={400}
+                height={60}
+                className="w-auto h-10 sm:h-12 lg:h-14 max-w-full"
+              />
+            </div> */}
+          </div>
+
+          {/* Right Image */}
+          <div className="flex justify-center lg:justify-start order-first lg:order-last">
+            <div className="relative w-full max-w-md sm:max-w-lg lg:max-w-2xl">
+              <Image
+                src="/transformation.png"
+                alt="Before and after transformation"
+                width={600}
+                height={400}
+                className="shadow-2xl w-full h-auto rounded-lg"
+              />
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Fitness Section */}
+      <section className="py-12 mb-20">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why I Can Be Fitter</h2>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid lg:grid-cols-3 gap-16">
+            {/* Left Card - Balanced Meals */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden lg:col-span-2">
+              <CardContent className="p-10">
+                <div className="flex items-start gap-12">
+                  <div className="flex-1">
+                    <div className="inline-flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+                      <Zap className="w-4 h-4 mr-2" />
+                      Get Yourself A Healthier Diet
+                    </div>
+
+                    <h2 className="text-3xl font-bold mb-4">
+                      <span className="text-gray-900">Fit your body with </span>
+                      <span className="text-blue-600">balanced meals</span>
+                    </h2>
+
+                    <p className="text-gray-600 mb-8 leading-relaxed text-lg">
+                      We go beyond fitness by empowering you with insights and guidance to boost your blood cell
+                      production, enhance circulation and improve heart health.
+                    </p>
+
+                    <div className="flex gap-4">
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl">
+                        <Utensils className="w-4 h-4 mr-2" />
+                        Dieting
+                      </Button>
+                      <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-xl bg-transparent">
+                        <Dumbbell className="w-4 h-4 mr-2" />
+                        Workout
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="w-80 h-80 relative">
+                      <Image
+                        src="/Food.png"
+                        alt="Healthy bowl with colorful vegetables and protein"
+                        fill
+                        className="object-cover rounded-2xl"
+                      />
+                      
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Right Card - AI Chat Interface */}
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-3xl overflow-hidden">
+              <CardContent className="p-0 relative">
+                <div className="text-center">
+                  <div className="relative w-full h-64">
+                    <Image
+                      src="/AI.png"
+                      alt="AI-powered fitness assistant"
+                      fill
+                      className="object-cover rounded-t-3xl"
+                    />
+                  </div>
+
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3">
+                      Get Yourself A Personalized Diet Plan with Our ICBF AI
+                    </h3>
+
+                    <Button 
+                      onClick={() => window.location.href = '/ai-diet-planner'}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl"
+                    >
+                      Try For Free →
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Background Image with Text Overlay */}
+    <section className="hidden md:flex relative min-h-[400px] md:min-h-[500px] rounded-3xl overflow-hidden mb-12 items-center justify-center">
+      <Image
+        src="/Background.png"
+        alt="Fitness Journey Background"
+        fill
+        priority
+        className="object-contain w-full h-full absolute inset-0 z-0"
+      />
+      <div className="relative z-20 w-full h-full flex flex-col justify-center items-end pr-12 md:pr-24 -mt-40">
+        {/* Main Headline - positioned center-right */}
+        <div className="flex flex-col items-end text-right max-w-2xl mr-12 md:mr-24">
+          {/* Knowledge Is Power Badge - positioned above headline */}
+          <div className="mb-4">
+            <span className="inline-flex items-center bg-blue-500/80 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm font-manrope">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Knowledge is Power
+            </span>
+          </div>
+
+          <h1 className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-6 drop-shadow-xl text-right max-w-2xl font-manrope">
+            This Website Has All The<br />
+            Information To Get You Started On<br />
+            Your Fitness Journey !
+          </h1>
+
+          {/* Action Buttons - positioned below text on the right */}
+          <div className="flex flex-row gap-4">
+            <a href="/signin">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg transition-all duration-200 font-manrope">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                I Want To Get Fit
+              </button>
+            </a>
+            <a href="/signin">
+              <button className="bg-white/90 border border-blue-600 text-blue-700 hover:bg-blue-50 px-5 py-3 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg transition-all duration-200 font-manrope">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Connect With Trainer
+              </button>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+      {/* Meet the Minds Behind the Mission Section */}
+      <section className="container mx-auto px-6 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">
+            Meet the Minds Behind
+            <br />
+            the Mission
+          </h2>
+          <p className="text-slate-600 text-lg">Join As A Member, Train With Us, Or Become A Certified Coach</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-10 max-w-7xl mx-auto">
+          <div className="rounded-2xl overflow-hidden shadow-xl">
+            <Image
+              src="/Trainer/Trainer1.png"
+              alt="Trainer 1"
+              width={600}
+              height={500}
+              className="w-full h-96 object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-xl">
+            <Image
+              src="/Trainer/Trainer2.png"
+              alt="Trainer 2"
+              width={600}
+              height={500}
+              className="w-full h-96 object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-xl">
+            <Image
+              src="/Trainer/Trainer3.png"
+              alt="Trainer 3"
+              width={600}
+              height={500}
+              className="w-full h-96 object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Latest Blogs Section */}
+      <section className="bg-gray-50 py-16">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">
+              Latest from Our Blog
+            </h2>
+            <p className="text-slate-600 text-lg">Expert insights and tips to help you on your fitness journey</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {/* Blog Post 1 */}
+            <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              <div className="relative h-48">
+                <Image
+                  src="/placeholder.jpg"
+                  alt="Fitness Blueprint for Complete Beginners"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="bg-[#1F509A] text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Beginner Guide
+                  </span>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    ICANBEFITTER
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    April 6, 2019
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                  Fitness Blueprint for Complete Beginners!
+                </h3>
+                
+                <p className="text-gray-600 mb-4 line-clamp-3">
+                  According to most of us, getting Fit means inclusion of one or more of the following. Read their lacunae. Leg Intensive Cardio, Dieting, and Gym workout. Learn the step-by-step process to start your fitness journey properly.
+                </p>
+                
+                <Link href="/blogs/fitness-blueprint-beginners">
+                  <Button 
+                    variant="ghost" 
+                    className="text-[#1F509A] hover:text-[#1a4a8a] p-0 h-auto font-semibold flex items-center gap-2"
+                  >
+                    Read More
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </article>
+
+            {/* Blog Post 2 */}
+            <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              <div className="relative h-48">
+                <Image
+                  src="/placeholder.jpg"
+                  alt="ICANBEFITTER - It's Time to Love the Person in the Mirror"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="bg-[#1F509A] text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Motivation
+                  </span>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    ICANBEFITTER
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    March 2019
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                  ICANBEFITTER - It's Time to Love the Person in the Mirror
+                </h3>
+                
+                <p className="text-gray-600 mb-4 line-clamp-3">
+                  Becoming Fit is a Consequence of our Lifestyle! We see around us unfit people prone to lifestyle diseases, struggling to carry out their day to day activities. Learn how small incremental changes can make you fitter, both physically and mentally.
+                </p>
+                
+                <Link href="/blogs/icanbefitter-home">
+                  <Button 
+                    variant="ghost" 
+                    className="text-[#1F509A] hover:text-[#1a4a8a] p-0 h-auto font-semibold flex items-center gap-2"
+                  >
+                    Read More
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </article>
+
+            {/* Blog Post 3 */}
+            <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+              <div className="relative h-48">
+                <Image
+                  src="/placeholder.jpg"
+                  alt="Nutrition Myths Debunked"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="bg-[#1F509A] text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Nutrition
+                  </span>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                  <div className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    Nutrition Expert
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    March 5, 2024
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                  Nutrition Myths Debunked
+                </h3>
+                
+                <p className="text-gray-600 mb-4 line-clamp-3">
+                  Separating fact from fiction in the world of nutrition. Learn what really works for fat loss, muscle gain, and overall health.
+                </p>
+                
+                <Link href="/blogs/nutrition-myths-debunked">
+                  <Button 
+                    variant="ghost" 
+                    className="text-[#1F509A] hover:text-[#1a4a8a] p-0 h-auto font-semibold flex items-center gap-2"
+                  >
+                    Read More
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </article>
+          </div>
+
+          {/* View All Blogs Button */}
+          <div className="text-center mt-12">
+            <Link href="/blogs">
+              <Button className="bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-8 py-3 rounded-full font-semibold flex items-center gap-2 mx-auto">
+                View All Blogs
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="min-h-screen bg-white py-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <span className="mr-2">👥</span>
+              Our Trusted Clients
+            </div>
+
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 max-w-4xl">
+                Words Of Praise From Others About Our Presence.
+              </h2>
+            </div>
+          </div>
+
+          {/* Testimonials Grid */}
+          <div className="relative px-12">
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                {
+                  id: 1,
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a Gallery.",
+                  author: "Alex Santhman",
+                  role: "Social worker",
+                  avatar: "/placeholder-user.jpg",
+                  rating: 4.5,
+                  timeAgo: "4 months ago",
+                },
+                {
+                  id: 2,
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a Gallery.",
+                  author: "Alex Santhman",
+                  role: "Social worker",
+                  avatar: "/placeholder-user.jpg",
+                  rating: 4.5,
+                  timeAgo: "4 months ago",
+                },
+                {
+                  id: 3,
+                  text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a Gallery.",
+                  author: "Alex Santhman",
+                  role: "Social worker",
+                  avatar: "/placeholder-user.jpg",
+                  rating: 4.5,
+                  timeAgo: "4 months ago",
+                },
+              ].map((testimonial, index) => (
+                <div key={testimonial.id} className="bg-white rounded-2xl overflow-hidden shadow-lg relative">
+                  {/* Left Arrow on First Testimonial */}
+                  {index === 0 && (
+                    <Button 
+                      variant="outline" 
+                      className="absolute -left-16 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center bg-white shadow-lg z-20"
+                      aria-label="Previous testimonials"
+                    >
+                      <ArrowRight className="w-5 h-5 rotate-180 text-gray-600" />
+                    </Button>
+                  )}
+
+                  {/* Right Arrow on Last Testimonial */}
+                  {index === 2 && (
+                    <Button 
+                      variant="outline" 
+                      className="absolute -right-16 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center bg-white shadow-lg z-20"
+                      aria-label="Next testimonials"
+                    >
+                      <ArrowRight className="w-5 h-5 text-gray-600" />
+                    </Button>
+                  )}
+
+                  {/* Before/After Image Section - Black Background */}
+                  <div className="bg-black h-48 relative">
+                    <div className="flex h-full">
+                      {/* Before Image */}
+                      <div className="w-1/2 h-full bg-gray-800 flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <div className="text-sm font-semibold mb-2">BEFORE</div>
+                          <div className="w-16 h-16 bg-gray-600 rounded-full mx-auto"></div>
+                        </div>
+                      </div>
+                      {/* After Image */}
+                      <div className="w-1/2 h-full bg-gray-700 flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <div className="text-sm font-semibold mb-2">AFTER</div>
+                          <div className="w-16 h-16 bg-gray-500 rounded-full mx-auto"></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Profile Picture Overlay */}
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+                      <Image
+                        src={testimonial.avatar}
+                        alt={testimonial.author}
+                        width={60}
+                        height={60}
+                        className="rounded-full border-4 border-white shadow-lg"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Testimonial Content Section */}
+                  <div className="bg-blue-50 p-6 pt-8 relative">
+                    {/* Quote Icon */}
+                    <div className="text-blue-600 text-4xl font-serif absolute top-2 left-4">"</div>
+                    
+                    {/* Star Rating and Author Info */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex gap-1">
+                        {[...Array(4)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" style={{ clipPath: 'inset(0 50% 0 0)' }} />
+                      </div>
+                    </div>
+
+                    {/* Author Details */}
+                    <div className="mb-4">
+                      <h4 className="font-semibold text-gray-900 text-sm">{testimonial.author}</h4>
+                      <p className="text-gray-600 text-xs">{testimonial.role}</p>
+                      <p className="text-gray-500 text-xs">{testimonial.timeAgo}</p>
+                    </div>
+
+                    {/* Testimonial Text */}
+                    <p className="text-gray-700 text-sm leading-relaxed">{testimonial.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Community Section */}
+      <section className="bg-gradient-to-br from-blue-50 to-blue-100 py-16 rounded-3xl mx-4">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+            {/* Left Content */}
+            <div className="space-y-6">
+              <div className="inline-flex items-center bg-blue-200 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
+                <span className="mr-2">👥</span>A movement that matters
+              </div>
+
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                Be the part personalised fitness community of India
+              </h2>
+
+              <p className="text-gray-600 text-lg leading-relaxed">
+                We're not just another fitness platform—we're a community of real people chasing real transformation.
+                Whether you're a beginner, a busy professional, or a seasoned athlete, our community is designed to
+                support you every step of the way.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full">
+                  ⭐ Be The Part Of Can Be Fit
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-full bg-transparent"
+                >
+                  Explore More →
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Phone Mockup */}
+            <div className="flex justify-center">
+              <Image
+                src="/phone.png"
+                alt="Phone mockup"
+                width={900}
+                height={1350}
+                className="w-full max-w-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+              <footer className="pt-0 pb-0 mt-16">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-5 gap-8">
+            {/* Connect with us */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-800 text-lg">Connect with us</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <span>📱</span>
+                  <span>+91 38827 28322</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <span>✉️</span>
+                  <span>support@icbf.com</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <span>📷</span>
+                  <span>@icanbefitter</span>
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <div className="w-8 h-8 bg-blue-600 rounded"></div>
+                  <div className="w-8 h-8 bg-blue-600 rounded"></div>
+                  <div className="w-8 h-8 bg-blue-600 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Company */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-800 text-lg">Company</h3>
+              <div className="space-y-2">
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  About Us
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Community
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Become a coach
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Help & Support
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Contact Us
+                </a>
+              </div>
+            </div>
+
+            {/* Services */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-800 text-lg">Services</h3>
+              <div className="space-y-2">
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Online Coaching
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Corporate Wellness
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Fitness & Nutrition Courses
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Weight Loss Diet Plan
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Diabetes Lifestyle Management
+                </a>
+              </div>
+            </div>
+
+            {/* Tools */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-800 text-lg">Tools</h3>
+              <div className="space-y-2">
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Manus AI
+                </a>
+                <a href="/bmi-calculator" className="block text-slate-600 hover:text-blue-600">
+                  BMI Calculator
+                </a>
+                <a href="/calories-calculator" className="block text-slate-600 hover:text-blue-600">
+                  Calories Calculator
+                </a>
+              </div>
+            </div>
+
+            {/* Resources */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-800 text-lg">Resources</h3>
+              <div className="space-y-2">
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Blog
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Learn
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Pricing
+                </a>
+                <a href="#" className="block text-slate-600 hover:text-blue-600">
+                  Help center
+                </a>
+              </div>
+            </div>
+          </div>
+
+
+        </div>
+      </footer>
+
+      {/* Footer Image */}
+      <div className="w-full">
+        <Image
+          src="/footer.png"
+          alt="Footer decoration"
+          width={1920}
+          height={200}
+          className="w-full object-cover"
+        />
+      </div>
+
+      {/* Diet Plan Modal */}
+      <DietPlanModal isOpen={showModal} onClose={closeModal} />
+      
+      {/* Diet Plan Popup Modal */}
+      <DietPlanPopupModal isOpen={showPopup} onClose={closePopup} />
+    </div>
+  )
+}
