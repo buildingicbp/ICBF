@@ -168,11 +168,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-12">
-<<<<<<< HEAD
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why I Can Be Fitter</h2>
-=======
-            <h1 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">Why I Can Be Fitter</h1>
->>>>>>> origin/main
           </div>
 
           {/* Main Content Grid */}
@@ -528,15 +524,9 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center justify-center gap-4 mb-8">
-<<<<<<< HEAD
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 max-w-4xl">
                 Words Of Praise From Others About Our Presence.
               </h2>
-=======
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 max-w-4xl">
-                Words Of Praise From Others About Our Presence.
-              </h1>
->>>>>>> origin/main
             </div>
           </div>
 
@@ -668,15 +658,9 @@ export default function LandingPage() {
                 <span className="mr-2">👥</span>A movement that matters
               </div>
 
-<<<<<<< HEAD
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
                 Be the part personalised fitness community of India
               </h2>
-=======
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                Be the part personalised fitness community of India
-              </h1>
->>>>>>> origin/main
 
               <p className="text-gray-600 text-lg leading-relaxed">
                 We're not just another fitness platform—we're a community of real people chasing real transformation.
