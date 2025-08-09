@@ -102,4 +102,22 @@
     padding: 0;
     overflow-x: hidden;
   }
+
+  /* Hide scrollbars globally but keep scrolling */
+  html, body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  /* Also hide for any scrollable inner containers */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
 }

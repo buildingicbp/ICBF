@@ -85,12 +85,12 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="bg-white" style={{ transform: 'scale(0.9)', transformOrigin: 'top center', margin: '0', padding: '0', minHeight: '100vh' }}>
+    <div className="bg-white min-h-screen overflow-x-hidden">
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-20 items-center">
           {/* Left Content */}
-          <div className="space-y-6 sm:space-y-8 text-center">
+          <div className="space-y-6 sm:space-y-8 text-left">
             <div className="space-y-4 sm:space-y-6">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-[#1F509A] leading-tight">
                 It's Time To Love
@@ -112,7 +112,7 @@ export default function LandingPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-4 flex flex-col items-center">
+            <div className="space-y-4 flex flex-col items-start">
               <div className="flex flex-col gap-4 w-full max-w-sm">
                 <Link href="/signin" className="w-full">
                   <Button className="w-full bg-[#1F509A] hover:bg-[#1a4a8a] text-white px-6 sm:px-8 lg:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200">
@@ -304,7 +304,7 @@ export default function LandingPage() {
     </section>
 
       {/* Meet the Minds Behind the Mission Section */}
-      <section className="container mx-auto px-6 py-16">
+      <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">
             Meet the Minds Behind
@@ -314,40 +314,34 @@ export default function LandingPage() {
           <p className="text-slate-600 text-lg">Join As A Member, Train With Us, Or Become A Certified Coach</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-10 max-w-7xl mx-auto">
-          <div className="rounded-2xl overflow-hidden shadow-xl">
-            <Image
-              src="/Trainer/Trainer1.png"
-              alt="Trainer 1"
-              width={600}
-              height={500}
-              className="w-full h-96 object-cover hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <div className="rounded-2xl overflow-hidden shadow-xl">
-            <Image
-              src="/Trainer/Trainer2.png"
-              alt="Trainer 2"
-              width={600}
-              height={500}
-              className="w-full h-96 object-cover hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          <div className="rounded-2xl overflow-hidden shadow-xl">
-            <Image
-              src="/Trainer/Trainer3.png"
-              alt="Trainer 3"
-              width={600}
-              height={500}
-              className="w-full h-96 object-cover hover:scale-105 transition-transform duration-300"
-            />
-          </div>
+        <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
+          <Image
+            src="/Trainer/Trainer1.png"
+            alt="Trainer 1"
+            width={600}
+            height={500}
+            className="w-full h-96 object-cover rounded-2xl"
+          />
+          <Image
+            src="/Trainer/Trainer2.png"
+            alt="Trainer 2"
+            width={600}
+            height={500}
+            className="w-full h-96 object-cover rounded-2xl"
+          />
+          <Image
+            src="/Trainer/Trainer3.png"
+            alt="Trainer 3"
+            width={600}
+            height={500}
+            className="w-full h-96 object-cover rounded-2xl"
+          />
         </div>
       </section>
 
       {/* Latest Blogs Section */}
       <section className="bg-gray-50 py-16">
-        <div className="container mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">
               Latest from Our Blog
@@ -355,7 +349,7 @@ export default function LandingPage() {
             <p className="text-slate-600 text-lg">Expert insights and tips to help you on your fitness journey</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Blog Post 1 */}
             <article className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
               <div className="relative h-48">
@@ -649,9 +643,8 @@ export default function LandingPage() {
       </section>
 
       {/* Community Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-blue-100 py-16 rounded-3xl mx-4">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+      <section className="bg-gradient-to-br from-blue-50 to-blue-100 py-16 rounded-3xl max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
             {/* Left Content */}
             <div className="space-y-6">
               <div className="inline-flex items-center bg-blue-200 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
@@ -692,12 +685,11 @@ export default function LandingPage() {
               />
             </div>
           </div>
-        </div>
       </section>
 
       {/* Footer */}
               <footer className="pt-0 pb-0 mt-16">
-        <div className="container mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-5 gap-8">
             {/* Connect with us */}
             <div className="space-y-4">
@@ -808,13 +800,13 @@ export default function LandingPage() {
       </footer>
 
       {/* Footer Image */}
-      <div className="w-full">
+      <div className="w-full m-0 p-0 -mb-px">
         <Image
           src="/footer.png"
           alt="Footer decoration"
           width={1920}
           height={200}
-          className="w-full object-cover"
+          className="w-full object-cover block align-bottom"
         />
       </div>
 

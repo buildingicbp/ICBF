@@ -2,12 +2,18 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Clock, Target, Users, Zap, Star, ArrowRight, Calendar, MessageCircle, Dumbbell, Utensils, BookOpen, TrendingUp } from "lucide-react"
+import PricingSignupModal from "@/components/pricing-signup-modal"
 
 export default function ServicesPage() {
+  const [showPricingModal, setShowPricingModal] = useState(false)
+  const openPricingModal = () => setShowPricingModal(true)
+  const closePricingModal = () => setShowPricingModal(false)
+
   return (
     <div className="min-h-screen bg-white font-['Manrope']">
       {/* Hero Section */}
@@ -190,7 +196,7 @@ export default function ServicesPage() {
                   </div>
                 </div>
 
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 font-semibold">
+                <Button onClick={openPricingModal} className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 font-semibold">
                   Get Started
                 </Button>
               </CardContent>
@@ -230,7 +236,7 @@ export default function ServicesPage() {
                   </div>
                 </div>
 
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl py-3 font-bold shadow-lg">
+                <Button onClick={openPricingModal} className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl py-3 font-bold shadow-lg">
                   Choose This Plan
                 </Button>
               </CardContent>
@@ -270,7 +276,7 @@ export default function ServicesPage() {
                   </div>
                 </div>
 
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 font-semibold">
+                <Button onClick={openPricingModal} className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-3 font-semibold">
                   Start Long Journey
                 </Button>
               </CardContent>
@@ -369,6 +375,8 @@ export default function ServicesPage() {
           </div>
         </div>
       </section>
+
+      <PricingSignupModal isOpen={showPricingModal} onClose={closePricingModal} />
     </div>
   )
 } 

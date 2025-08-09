@@ -10,8 +10,11 @@ export default function ConditionalNavbar() {
   const isDashboardPage = pathname.includes('/admin-dashboard') || 
                          pathname.includes('/member-dashboard') || 
                          pathname.includes('/trainer-dashboard')
+
+  // Hide navbar on blog detail pages: /blogs/[slug]
+  const isBlogDetailPage = /^\/blogs\/[^/]+$/.test(pathname)
   
-  if (isDashboardPage) {
+  if (isDashboardPage || isBlogDetailPage) {
     return null
   }
   
