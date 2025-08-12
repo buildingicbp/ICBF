@@ -24,6 +24,7 @@ import {
   Utensils
 } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 
@@ -70,11 +71,11 @@ export function DashboardSidebar({ userType, activePage = 'dashboard' }: Dashboa
 
   return (
     <>
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu Button - moved to top-right to avoid overlapping the logo */}
       <Button
         variant="ghost"
         size="sm"
-        className="lg:hidden fixed top-4 left-4 z-50"
+        className="lg:hidden fixed top-4 right-4 z-50"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         {isCollapsed ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -89,7 +90,7 @@ export function DashboardSidebar({ userType, activePage = 'dashboard' }: Dashboa
         <div className="flex flex-col h-full">
           {/* Logo Section */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
+            <Link href="/?from=dashboard" aria-label="Go to Landing Page" className="flex items-center space-x-3 cursor-pointer">
               <Image 
                 src="/logo.png" 
                 alt="ICBF Logo" 
@@ -104,7 +105,7 @@ export function DashboardSidebar({ userType, activePage = 'dashboard' }: Dashboa
                   {userType === 'member' ? 'Member' : 'Trainer'}
                 </span>
               )}
-            </div>
+            </Link>
           </div>
 
           {/* User Info */}

@@ -2,12 +2,55 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { MessageCircle, ArrowRight, Menu, X } from "lucide-react"
+import { MessageCircle, ArrowRight, Menu, X, LogOut } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, signOut, loading } = useAuth()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const handleLogout = async () => {
+    await signOut()
+    // Optional: navigate to home after logout
+    // window.location.href = "/"
+  }
+
+  // Compute dashboard href based on user role/email
+  const dashboardHref = (() => {
+    const email = user?.email?.toLowerCase()
+    const type = (user?.user_metadata?.userType as 'member' | 'trainer' | undefined) || 'member'
+    if (email === 'icanbefitter@gmail.com') return '/admin-dashboard'
+    if (type === 'trainer') return '/trainer-dashboard'
+    return '/member-dashboard'
+  })()
+
+  // Resolve a friendly display name (first name preferred)
+  const displayName = (() => {
+    const full = (user?.user_metadata?.full_name as string | undefined) || ""
+    const username = (user?.user_metadata?.username as string | undefined) || ""
+    const email = user?.email || ""
+    const firstFromFull = full.trim().split(" ")[0]
+    if (firstFromFull) return firstFromFull
+    if (username) return username
+    if (email) return email.split("@")[0]
+    return "there"
+  })()
+
+  // Close menu on outside click
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!menuRef.current) return
+      if (!menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    if (menuOpen) document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [menuOpen])
 
   return (
     <>
@@ -51,13 +94,49 @@ export default function Navbar() {
               <span className="sm:hidden">Consultation</span>
             </Button>
           </a>
-          <Link href="/signin">
-            <Button variant="outline" className="border-gray-300 text-[#1F509A] hover:bg-gray-50 px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
-              <span className="hidden sm:inline">Signup As</span>
-              <span className="sm:hidden">Signup</span>
-              <ArrowRight className="w-3 h-3" />
-            </Button>
-          </Link>
+          {user ? (
+            <div className="relative" ref={menuRef}>
+              {/* Name Button */}
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                className="px-3 py-1.5 rounded-full border border-gray-300 bg-white text-[#1F509A] text-xs sm:text-sm font-semibold flex items-center gap-2 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {`Hey ${displayName}`}
+              </button>
+              {/* Click Menu */}
+              {menuOpen && (
+                <div role="menu" className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg p-2">
+                  <Link href={dashboardHref} onClick={() => setMenuOpen(false)}>
+                    <Button className="w-full justify-start gap-2" size="sm">
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setMenuOpen(false); handleLogout() }}
+                    className="w-full justify-start gap-2 mt-2 text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <LogOut className="w-4 h-4" /> Logout
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/signin">
+              <Button
+                variant="outline"
+                className="border-gray-300 text-[#1F509A] hover:bg-gray-50 px-2 sm:px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1"
+              >
+                <span className="hidden sm:inline">Signup As</span>
+                <span className="sm:hidden">Signup</span>
+                <ArrowRight className="w-3 h-3" />
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -123,16 +202,37 @@ export default function Navbar() {
                   Book a Free Consultation
                 </Button>
               </a>
-              <Link href="/signin" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full border-gray-300 text-[#1F509A] hover:bg-gray-50 py-3 rounded-full font-medium flex items-center justify-center gap-2">
-                  Signup As
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  <Link href="/member-dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full bg-gray-900 text-white hover:bg-gray-800 py-3 rounded-full font-medium flex items-center justify-center gap-2">
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false)
+                      handleLogout()
+                    }}
+                    className="w-full border-gray-300 text-red-600 hover:bg-gray-50 py-3 rounded-full font-medium flex items-center justify-center gap-2"
+                  >
+                    Logout
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                </>
+              ) : (
+                <Link href="/signin" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full border-gray-300 text-[#1F509A] hover:bg-gray-50 py-3 rounded-full font-medium flex items-center justify-center gap-2">
+                    Signup As
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
       )}
     </>
   )
-} 
+}

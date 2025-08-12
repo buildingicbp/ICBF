@@ -12,7 +12,7 @@ import { useScrollModal } from "@/hooks/use-scroll-modal"
 import DietPlanPopupModal from "@/components/diet-plan-popup-modal"
 import { useDietPlanPopup } from "@/hooks/use-diet-plan-popup"
 import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 
@@ -21,11 +21,14 @@ export default function LandingPage() {
   const { showPopup, closePopup } = useDietPlanPopup()
   const { user, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const from = searchParams?.get('from')
+  const skipRedirect = from === 'dashboard'
 
   // Redirect authenticated users to their dashboard
   useEffect(() => {
     const handleRedirect = async () => {
-      if (!loading && user) {
+      if (!loading && user && !skipRedirect) {
         // Force refresh session to get latest metadata
         const { data: sessionData } = await supabase.auth.getSession()
         const currentUser = sessionData.session?.user || user
@@ -65,7 +68,7 @@ export default function LandingPage() {
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [user, loading, router])
+  }, [user, loading, router, skipRedirect])
 
   // Show loading while checking authentication
   if (loading) {
@@ -80,7 +83,7 @@ export default function LandingPage() {
   }
 
   // Don't render the landing page if user is authenticated
-  if (user) {
+  if (user && !skipRedirect) {
     return null
   }
 
