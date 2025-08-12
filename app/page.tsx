@@ -12,7 +12,7 @@ import { useScrollModal } from "@/hooks/use-scroll-modal"
 import DietPlanPopupModal from "@/components/diet-plan-popup-modal"
 import { useDietPlanPopup } from "@/hooks/use-diet-plan-popup"
 import { useAuth } from "@/hooks/use-auth"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 
@@ -21,9 +21,14 @@ export default function LandingPage() {
   const { showPopup, closePopup } = useDietPlanPopup()
   const { user, loading } = useAuth()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const from = searchParams?.get('from')
-  const skipRedirect = from === 'dashboard'
+  const [skipRedirect, setSkipRedirect] = useState(false)
+
+  // Determine if we should skip redirect based on URL (client-side only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    setSkipRedirect(params.get('from') === 'dashboard')
+  }, [])
 
   // Redirect authenticated users to their dashboard
   useEffect(() => {

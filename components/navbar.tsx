@@ -104,7 +104,7 @@ export default function Navbar() {
                 aria-expanded={menuOpen}
                 className="px-3 py-1.5 rounded-full border border-gray-300 bg-white text-[#1F509A] text-xs sm:text-sm font-semibold flex items-center gap-2 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {`Hey ${displayName}`}
+                {`Hey "${displayName}"`}
               </button>
               {/* Click Menu */}
               {menuOpen && (
