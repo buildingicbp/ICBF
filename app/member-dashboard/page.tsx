@@ -6,10 +6,8 @@ import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
-  Activity, 
   Target, 
   Calendar, 
-  TrendingUp, 
   Heart,
   Dumbbell,
   Clock,
@@ -113,161 +111,138 @@ export default function MemberDashboardPage() {
         <div className="space-y-6">
           {/* Welcome Section */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow p-6 text-white">
-            <h1 className="text-2xl font-bold mb-2">
-              Welcome back, {user.user_metadata?.username || 'Member'}! 💪
-            </h1>
-            <p className="text-blue-100">
-              Ready to crush your fitness goals today? Let's track your progress and stay motivated!
-            </p>
+            <h1 className="text-2xl font-bold mb-2">Hello, Alex Johnson!</h1>
+            <p className="text-blue-100">Ready for a great workout?</p>
           </div>
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Stats Overview (mirrors the image, excluding Message Coach) */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <Activity className="w-5 h-5 text-green-600" />
+                  <Calendar className="w-5 h-5 text-blue-600" />
                   <div>
-                    <p className="text-sm text-gray-600">Workouts This Week</p>
-                    <p className="text-2xl font-bold">5</p>
+                    <p className="text-sm text-gray-600">Program Dates</p>
+                    <p className="text-lg font-semibold">Aug 1, 2025 - Nov 30, 2025</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <Target className="w-5 h-5 text-blue-600" />
+                  <Target className="w-5 h-5 text-green-600" />
                   <div>
-                    <p className="text-sm text-gray-600">Goals Achieved</p>
-                    <p className="text-2xl font-bold">12</p>
+                    <p className="text-sm text-gray-600">Objective</p>
+                    <p className="text-lg font-semibold">Weight Loss, Muscle Gain</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-5 h-5 text-purple-600" />
+                  <Clock className="w-5 h-5 text-purple-600" />
                   <div>
-                    <p className="text-sm text-gray-600">Current Streak</p>
-                    <p className="text-2xl font-bold">7 days</p>
+                    <p className="text-sm text-gray-600">Left</p>
+                    <p className="text-2xl font-bold">1 days</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
                   <Heart className="w-5 h-5 text-red-600" />
                   <div>
-                    <p className="text-sm text-gray-600">Calories Burned</p>
-                    <p className="text-2xl font-bold">2,450</p>
+                    <p className="text-sm text-gray-600">Start Weight</p>
+                    <p className="text-2xl font-bold">150 lbs</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-2">
+                  <Award className="w-5 h-5 text-yellow-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Workouts Completed</p>
+                    <p className="text-2xl font-bold">15 / 20</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Dumbbell className="w-5 h-5" />
-                  <span>Quick Actions</span>
-                </CardTitle>
-                <CardDescription>
-                  Start your fitness journey with these quick actions
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full justify-start" size="lg">
-                  <Activity className="w-4 h-4 mr-2" />
-                  Start Workout
-                </Button>
-                <Button variant="outline" className="w-full justify-start" size="lg">
-                  <Target className="w-4 h-4 mr-2" />
-                  Set New Goal
-                </Button>
-                <Button variant="outline" className="w-full justify-start" size="lg">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Schedule Session
-                </Button>
-                <Button variant="outline" className="w-full justify-start" size="lg">
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  View Progress
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5" />
-                  <span>Today's Schedule</span>
-                </CardTitle>
-                <CardDescription>
-                  Your upcoming activities for today
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">Morning Cardio</p>
-                    <p className="text-sm text-gray-600">30 min HIIT</p>
-                  </div>
-                  <span className="text-sm text-blue-600">9:00 AM</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">Strength Training</p>
-                    <p className="text-sm text-gray-600">Upper Body</p>
-                  </div>
-                  <span className="text-sm text-green-600">6:00 PM</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">Yoga Session</p>
-                    <p className="text-sm text-gray-600">Flexibility</p>
-                  </div>
-                  <span className="text-sm text-purple-600">8:00 PM</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Achievements */}
-          <Card>
+          {/* Today's Plan */}
+          <Card id="today">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Award className="w-5 h-5" />
-                <span>Recent Achievements</span>
+                <Dumbbell className="w-5 h-5" />
+                <span>Today's Plan</span>
               </CardTitle>
-              <CardDescription>
-                Celebrate your fitness milestones
-              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="text-sm text-gray-600 mb-2">Full-Body Strength</div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span>Squats</span>
+                <span className="text-sm text-gray-600">5 sets x 5 reps</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span>Bench</span>
+                <span className="text-sm text-gray-600">3 sets x 8 reps</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span>Deadlift</span>
+                <span className="text-sm text-gray-600">5 sets x 5 reps</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Meal Plan note */}
+          <Card id="meal">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Heart className="w-5 h-5 text-red-600" />
+                <span>Meal Plan</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                  <Award className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-                  <p className="font-medium">7-Day Streak</p>
-                  <p className="text-sm text-gray-600">Completed 7 workouts in a row</p>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <p className="font-medium">Weight Goal</p>
-                  <p className="text-sm text-gray-600">Lost 5kg this month</p>
-                </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <Activity className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <p className="font-medium">Strength Milestone</p>
-                  <p className="text-sm text-gray-600">Bench press: 100kg</p>
-                </div>
+              <p className="text-sm text-gray-700">Focus on lean protein and vegetables.</p>
+            </CardContent>
+          </Card>
+
+          {/* Progress Photos */}
+          <Card id="photos">
+            <CardHeader>
+              <CardTitle>Progress Photos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-end gap-4">
+                <div className="w-20 h-28 bg-gray-200 rounded-md flex items-center justify-center text-sm text-gray-600">Week 1</div>
+                <div className="w-20 h-32 bg-gray-200 rounded-md flex items-center justify-center text-sm text-gray-600">Week 2</div>
+                <div className="w-20 h-36 bg-gray-200 rounded-md flex items-center justify-center text-sm text-gray-600">Week 3</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card id="activity">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y">
+              <div className="flex items-center justify-between py-3">
+                <span>Leg Day</span>
+                <span className="text-xs text-gray-500">2 days ago</span>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <span>Logged Cardio</span>
+                <span className="text-xs text-gray-500">4 days ago</span>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <span>Cardio Session</span>
+                <span className="text-xs text-gray-500">yesterday</span>
               </div>
             </CardContent>
           </Card>

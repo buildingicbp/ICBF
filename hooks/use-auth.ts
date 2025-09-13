@@ -18,16 +18,25 @@ export function useAuth() {
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
-      console.log("Getting initial session...")
-      const { data: { session }, error } = await supabase.auth.getSession()
-      console.log("Initial session data:", session)
-      console.log("Initial session error:", error)
-      
-      setAuthState({
-        user: session?.user ?? null,
-        loading: false,
-        error: null,
-      })
+      console.log("🔍 [useAuth] Getting initial session...")
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        console.log("🔍 [useAuth] Initial session data:", session)
+        console.log("🔍 [useAuth] Initial session error:", error)
+        
+        setAuthState({
+          user: session?.user ?? null,
+          loading: false,
+          error: null,
+        })
+      } catch (error) {
+        console.error("❌ [useAuth] Error getting session:", error)
+        setAuthState(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to check authentication status'
+        }))
+      }
     }
 
     getSession()
@@ -35,8 +44,8 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state change event:", event)
-        console.log("Auth state change session:", session)
+        console.log("🔄 [useAuth] Auth state change event:", event)
+        console.log("🔄 [useAuth] Auth state change session:", session)
         
         setAuthState({
           user: session?.user ?? null,
@@ -46,7 +55,10 @@ export function useAuth() {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      console.log("🔌 [useAuth] Cleaning up auth subscription")
+      subscription?.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string, selectedUserType?: 'member' | 'trainer') => {

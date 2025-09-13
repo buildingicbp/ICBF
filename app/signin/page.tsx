@@ -55,7 +55,49 @@ export default function SignUpPage() {
 
     try {
       if (isSignIn) {
-        // Password Sign In
+        console.log("🔍 DEBUG: userType state:", userType)
+        console.log("🔍 DEBUG: isSignIn:", isSignIn)
+        console.log("🔍 DEBUG: userType === 'trainer':", userType === 'trainer')
+        console.log("🔍 DEBUG: typeof userType:", typeof userType)
+        console.log("🔍 DEBUG: userType.trim():", userType.trim())
+        
+        // Check if this is a trainer login
+        if (userType === 'trainer') {
+          console.log("✅ ENTERING TRAINER LOGIN PATH")
+          console.log("🏋️ Trainer login attempt - using custom API")
+          
+          try {
+            const response = await fetch('/api/trainer-login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: formData.email,
+                password: formData.password
+              }),
+            })
+
+            const result = await response.json()
+
+            if (response.ok && result.success) {
+              // Store trainer session in localStorage
+              localStorage.setItem('trainerSession', JSON.stringify(result.trainer))
+              toast.success("Successfully signed in as trainer!")
+              router.push("/trainer-dashboard")
+              return
+            } else {
+              toast.error(result.error || "Invalid trainer credentials")
+              return
+            }
+          } catch (trainerError) {
+            console.error("Trainer login error:", trainerError)
+            toast.error("Error connecting to trainer authentication")
+            return
+          }
+        }
+
+        // Regular member sign in
         console.log("🔐 Signing in with userType:", userType)
         const { error } = await signIn(formData.email, formData.password, userType as 'member' | 'trainer')
         if (error) {
@@ -420,7 +462,7 @@ export default function SignUpPage() {
             >
               {loading ? "Loading..." : (
                 isSignIn 
-                  ? "Signup"
+                  ? "Login"
                   : "Get Started"
               )}
             </Button>

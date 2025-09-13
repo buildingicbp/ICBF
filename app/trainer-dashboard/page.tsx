@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
@@ -20,19 +20,44 @@ import {
 } from "lucide-react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 
+interface TrainerSession {
+  id: string
+  email: string
+  full_name: string
+  loginTime: string
+}
+
 export default function TrainerDashboardPage() {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
+  const [trainerSession, setTrainerSession] = useState<TrainerSession | null>(null)
 
+  // Check for trainer session on mount
   useEffect(() => {
-    // If loading is complete and no user, redirect to signin
-    if (!loading && !user) {
+    if (typeof window !== 'undefined') {
+      const storedSession = localStorage.getItem('trainerSession')
+      if (storedSession) {
+        try {
+          const session = JSON.parse(storedSession)
+          setTrainerSession(session)
+        } catch (error) {
+          console.error('Error parsing trainer session:', error)
+          localStorage.removeItem('trainerSession')
+        }
+      }
+    }
+  }, [])
+
+  // Handle auth redirects
+  useEffect(() => {
+    // If loading is complete and no user and no trainer session, redirect to signin
+    if (!loading && !user && !trainerSession) {
       router.push("/signin")
       return
     }
 
-    // If user exists and loading is complete
-    if (!loading && user) {
+    // If user exists and loading is complete (regular Supabase auth)
+    if (!loading && user && !trainerSession) {
       const userType = user.user_metadata?.userType || 'member'
       const userEmail = user.email?.toLowerCase()
       
@@ -47,18 +72,18 @@ export default function TrainerDashboardPage() {
         return
       }
     }
-  }, [user, loading, router])
+  }, [user, loading, router, trainerSession])
 
   // Add a separate effect to handle sign-out redirect
   useEffect(() => {
-    // If user becomes null after being authenticated, redirect to home
-    if (!loading && !user && typeof window !== 'undefined') {
+    // If user becomes null after being authenticated and no trainer session, redirect to home
+    if (!loading && !user && !trainerSession && typeof window !== 'undefined') {
       // Check if we're on a dashboard page
       if (window.location.pathname.includes('dashboard')) {
         window.location.href = '/'
       }
     }
-  }, [user, loading])
+  }, [user, loading, trainerSession])
 
 
 
@@ -73,9 +98,28 @@ export default function TrainerDashboardPage() {
     )
   }
 
-  if (!user) {
+  if (!user && !trainerSession) {
     return null
   }
+
+  const handleSignOut = async () => {
+    if (trainerSession) {
+      // Clear trainer session
+      localStorage.removeItem('trainerSession')
+      window.location.href = '/'
+    } else {
+      // Regular Supabase sign out
+      try {
+        await signOut()
+        window.location.href = '/'
+      } catch (error) {
+        console.error('Sign out error:', error)
+        window.location.href = '/'
+      }
+    }
+  }
+
+  const displayName = trainerSession ? trainerSession.full_name : (user?.user_metadata?.username || user?.email || 'Trainer')
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -110,7 +154,7 @@ export default function TrainerDashboardPage() {
           {/* Welcome Section */}
           <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg shadow p-6 text-white">
             <h1 className="text-2xl font-bold mb-2">
-              Welcome back, {user.user_metadata?.username || 'Trainer'}! 🏋️‍♂️
+              Welcome back, {displayName}! 🏋️‍♂️
             </h1>
             <p className="text-green-100">
               Ready to inspire and guide your clients to their fitness goals today?

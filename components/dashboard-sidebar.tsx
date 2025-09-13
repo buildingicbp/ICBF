@@ -44,12 +44,11 @@ export function DashboardSidebar({ userType, activePage = 'dashboard' }: Dashboa
   }
 
   const memberNavItems = [
-    { icon: Home, label: 'Dashboard', href: '/member-dashboard', active: activePage === 'dashboard' },
-    { icon: Activity, label: 'My Workouts', href: '/member-dashboard/workouts', active: activePage === 'workouts' },
-    { icon: Target, label: 'Goals', href: '/member-dashboard/goals', active: activePage === 'goals' },
-    { icon: Calendar, label: 'Schedule', href: '/member-dashboard/schedule', active: activePage === 'schedule' },
-    { icon: TrendingUp, label: 'Progress', href: '/member-dashboard/progress', active: activePage === 'progress' },
-    { icon: Award, label: 'Achievements', href: '/member-dashboard/achievements', active: activePage === 'achievements' },
+    { icon: Home, label: 'Overview', href: '/member-dashboard', active: activePage === 'dashboard' },
+    { icon: Dumbbell, label: "Today's Plan", href: '/member-dashboard#today', active: false },
+    { icon: Utensils, label: 'Meal Plan', href: '/member-dashboard#meal', active: false },
+    { icon: Award, label: 'Progress Photos', href: '/member-dashboard#photos', active: false },
+    { icon: Clock, label: 'Recent Activity', href: '/member-dashboard#activity', active: false },
     { icon: User, label: 'Profile', href: '/member-dashboard/profile', active: activePage === 'profile' },
     { icon: Settings, label: 'Settings', href: '/member-dashboard/settings', active: activePage === 'settings' },
   ]

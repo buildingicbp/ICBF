@@ -6,12 +6,19 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { MessageCircle, ArrowRight, Menu, X, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
+import { usePathname } from 'next/navigation'
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { user, signOut, loading } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+  
+  // Force re-render when path changes to ensure auth state is in sync
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [pathname])
 
   const handleLogout = async () => {
     await signOut()
@@ -39,6 +46,11 @@ export default function Navbar() {
     if (email) return email.split("@")[0]
     return "there"
   })()
+  
+  // Check if user is a trainer
+  const isTrainer = (user?.user_metadata?.userType as string)?.toLowerCase() === 'trainer' || 
+                  user?.email?.toLowerCase().includes('trainer') ||
+                  user?.email?.toLowerCase().includes('admin')
 
   // Close menu on outside click
   useEffect(() => {
