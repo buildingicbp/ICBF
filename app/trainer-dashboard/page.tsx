@@ -16,9 +16,14 @@ import {
   Award,
   Target,
   DollarSign,
-  LogOut
+  LogOut,
+  Mail,
+  Phone,
+  User,
+  Eye
 } from "lucide-react"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import { MemberDetailsModal } from "@/components/member-details-modal"
 
 interface TrainerSession {
   id: string
@@ -27,10 +32,47 @@ interface TrainerSession {
   loginTime: string
 }
 
+interface Member {
+  id: string
+  user_id: string
+  username?: string
+  email: string
+  contact?: string
+  full_name?: string
+  date_of_birth?: string
+  gender?: string
+  height?: number
+  weight?: number
+  fitness_goals?: string[]
+  experience_level?: string
+  medical_conditions?: string[]
+  emergency_contact?: string
+  membership_type?: string
+  join_date: string
+  last_workout?: string
+  total_workouts: number
+  current_streak: number
+  longest_streak: number
+  total_calories_burned: number
+  assignment_id?: string
+  assigned_date?: string
+  assignment_notes?: string
+}
+
 export default function TrainerDashboardPage() {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
   const [trainerSession, setTrainerSession] = useState<TrainerSession | null>(null)
+  const [assignedMembers, setAssignedMembers] = useState<Member[]>([])
+  const [membersLoading, setMembersLoading] = useState(true)
+  const [stats, setStats] = useState({
+    activeClients: 0,
+    sessionsToday: 0,
+    rating: 4.9,
+    monthlyEarnings: 3240
+  })
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [showMemberModal, setShowMemberModal] = useState(false)
 
   // Check for trainer session on mount
   useEffect(() => {
@@ -47,6 +89,37 @@ export default function TrainerDashboardPage() {
       }
     }
   }, [])
+
+  // Fetch assigned members when trainer session is available
+  useEffect(() => {
+    if (trainerSession?.email) {
+      fetchAssignedMembers()
+    }
+  }, [trainerSession])
+
+  const fetchAssignedMembers = async () => {
+    if (!trainerSession?.email) return
+    
+    setMembersLoading(true)
+    try {
+      const response = await fetch(`/api/trainer-members/my-members?trainer_email=${encodeURIComponent(trainerSession.email)}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setAssignedMembers(data.members || [])
+        setStats(prev => ({
+          ...prev,
+          activeClients: data.total_members || 0
+        }))
+      } else {
+        console.error('Error fetching assigned members:', data.error)
+      }
+    } catch (error) {
+      console.error('Error fetching assigned members:', error)
+    } finally {
+      setMembersLoading(false)
+    }
+  }
 
   // Handle auth redirects
   useEffect(() => {
@@ -121,6 +194,16 @@ export default function TrainerDashboardPage() {
 
   const displayName = trainerSession ? trainerSession.full_name : (user?.user_metadata?.username || user?.email || 'Trainer')
 
+  const handleMemberClick = (member: Member) => {
+    setSelectedMember(member)
+    setShowMemberModal(true)
+  }
+
+  const handleCloseMemberModal = () => {
+    setShowMemberModal(false)
+    setSelectedMember(null)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -169,7 +252,7 @@ export default function TrainerDashboardPage() {
                   <Users className="w-5 h-5 text-blue-600" />
                   <div>
                     <p className="text-sm text-gray-600">Active Clients</p>
-                    <p className="text-2xl font-bold">24</p>
+                    <p className="text-2xl font-bold">{stats.activeClients}</p>
                   </div>
                 </div>
               </CardContent>
@@ -181,7 +264,7 @@ export default function TrainerDashboardPage() {
                   <Calendar className="w-5 h-5 text-green-600" />
                   <div>
                     <p className="text-sm text-gray-600">Sessions Today</p>
-                    <p className="text-2xl font-bold">8</p>
+                    <p className="text-2xl font-bold">{stats.sessionsToday}</p>
                   </div>
                 </div>
               </CardContent>
@@ -193,7 +276,7 @@ export default function TrainerDashboardPage() {
                   <Star className="w-5 h-5 text-yellow-600" />
                   <div>
                     <p className="text-sm text-gray-600">Rating</p>
-                    <p className="text-2xl font-bold">4.9</p>
+                    <p className="text-2xl font-bold">{stats.rating}</p>
                   </div>
                 </div>
               </CardContent>
@@ -205,7 +288,7 @@ export default function TrainerDashboardPage() {
                   <DollarSign className="w-5 h-5 text-green-600" />
                   <div>
                     <p className="text-sm text-gray-600">Monthly Earnings</p>
-                    <p className="text-2xl font-bold">$3,240</p>
+                    <p className="text-2xl font-bold">${stats.monthlyEarnings.toLocaleString()}</p>
                   </div>
                 </div>
               </CardContent>
@@ -225,9 +308,13 @@ export default function TrainerDashboardPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start" size="lg">
+                <Button 
+                  className="w-full justify-start" 
+                  size="lg"
+                  onClick={() => window.location.href = '/trainer-members'}
+                >
                   <Users className="w-4 h-4 mr-2" />
-                  View All Clients
+                  View All Clients ({stats.activeClients})
                 </Button>
                 <Button variant="outline" className="w-full justify-start" size="lg">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -247,42 +334,79 @@ export default function TrainerDashboardPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5" />
-                  <span>Today's Sessions</span>
+                  <Users className="w-5 h-5" />
+                  <span>My Assigned Members</span>
                 </CardTitle>
                 <CardDescription>
-                  Your scheduled training sessions
+                  Members currently assigned to you
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">John Smith</p>
-                    <p className="text-sm text-gray-600">Strength Training</p>
+                {membersLoading ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-sm text-gray-600 mt-2">Loading members...</p>
                   </div>
-                  <span className="text-sm text-blue-600">9:00 AM</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">Sarah Johnson</p>
-                    <p className="text-sm text-gray-600">Cardio HIIT</p>
+                ) : assignedMembers.length > 0 ? (
+                  assignedMembers.slice(0, 4).map((member, index) => (
+                    <div 
+                      key={member.id} 
+                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200 ${
+                        index % 4 === 0 ? 'bg-blue-50 hover:bg-blue-100' : 
+                        index % 4 === 1 ? 'bg-green-50 hover:bg-green-100' : 
+                        index % 4 === 2 ? 'bg-purple-50 hover:bg-purple-100' : 'bg-orange-50 hover:bg-orange-100'
+                      }`}
+                      onClick={() => handleMemberClick(member)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          index % 4 === 0 ? 'bg-blue-100' : 
+                          index % 4 === 1 ? 'bg-green-100' : 
+                          index % 4 === 2 ? 'bg-purple-100' : 'bg-orange-100'
+                        }`}>
+                          <User className={`w-5 h-5 ${
+                            index % 4 === 0 ? 'text-blue-600' : 
+                            index % 4 === 1 ? 'text-green-600' : 
+                            index % 4 === 2 ? 'text-purple-600' : 'text-orange-600'
+                          }`} />
+                        </div>
+                        <div>
+                          <p className="font-medium">{member.full_name || member.username}</p>
+                          <p className="text-sm text-gray-600">{member.membership_type || 'Basic'} Member</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{member.total_workouts} workouts</p>
+                        <p className={`text-xs ${
+                          index % 4 === 0 ? 'text-blue-600' : 
+                          index % 4 === 1 ? 'text-green-600' : 
+                          index % 4 === 2 ? 'text-purple-600' : 'text-orange-600'
+                        }`}>{member.current_streak} day streak</p>
+                        <div className="flex items-center mt-1">
+                          <Eye className="w-3 h-3 mr-1 text-gray-400" />
+                          <span className="text-xs text-gray-500">Click to view</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                    <p>No members assigned yet</p>
+                    <p className="text-sm">Contact your admin to get members assigned</p>
                   </div>
-                  <span className="text-sm text-green-600">11:00 AM</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">Mike Davis</p>
-                    <p className="text-sm text-gray-600">Weight Loss</p>
+                )}
+                {assignedMembers.length > 4 && (
+                  <div className="text-center pt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.location.href = '/trainer-members'}
+                    >
+                      View All {assignedMembers.length} Members
+                    </Button>
                   </div>
-                  <span className="text-sm text-purple-600">2:00 PM</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">Lisa Wilson</p>
-                    <p className="text-sm text-gray-600">Yoga & Stretching</p>
-                  </div>
-                  <span className="text-sm text-orange-600">4:00 PM</span>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -376,6 +500,14 @@ export default function TrainerDashboardPage() {
           </Card>
         </div>
       </main>
+      
+      {/* Member Details Modal */}
+      <MemberDetailsModal
+        member={selectedMember}
+        isOpen={showMemberModal}
+        onClose={handleCloseMemberModal}
+        trainerEmail={trainerSession?.email || user?.email || ''}
+      />
     </div>
   )
 } 

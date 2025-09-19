@@ -16,7 +16,7 @@ ALTER TABLE trainer_accounts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role can manage trainer accounts" ON trainer_accounts
   FOR ALL USING (auth.role() = 'service_role');
 
--- Create index for performance
+-- Create index for performancei 
 CREATE INDEX idx_trainer_accounts_email ON trainer_accounts(email);
 
 -- Insert some sample trainer accounts (use bcrypt hashed passwords in production)

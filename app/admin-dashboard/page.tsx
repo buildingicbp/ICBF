@@ -7,6 +7,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { supabaseService } from "@/lib/supabase"
 import { 
   LogOut, 
   User, 
@@ -34,14 +35,20 @@ import {
   Star,
   Clock,
   Target,
-  Award
+  Award,
+  UserPlus,
+  X,
+  Check
 } from "lucide-react"
 import { toast } from "sonner"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Member {
   id: string
   user_id: string
-  username: string
+  username?: string  // Made optional to match the actual data structure
   email: string
   contact: string
   full_name?: string
@@ -66,30 +73,23 @@ interface Member {
 
 interface Trainer {
   id: string
-  user_id: string
-  username: string
   email: string
-  contact: string
+  password: string
   full_name: string
-  date_of_birth?: string
-  gender?: string
-  specialization: string[]
-  certifications: string[]
-  experience_years: number
-  bio?: string
-  hourly_rate: number
-  rating: number
-  total_reviews: number
-  total_clients: number
-  active_clients: number
-  total_sessions: number
-  join_date: string
-  is_verified: boolean
-  is_available: boolean
-  working_hours?: string
-  location?: string
+  is_active: boolean
   created_at: string
   updated_at: string
+}
+
+interface Assignment {
+  id: string
+  trainer_id: string
+  member_id: string
+  assigned_date: string
+  is_active: boolean
+  notes?: string
+  trainer?: Trainer
+  member?: Member
 }
 
 export default function AdminDashboardPage() {
@@ -101,23 +101,15 @@ export default function AdminDashboardPage() {
   const [trainers, setTrainers] = useState<Trainer[]>([])
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([])
   const [filteredTrainers, setFilteredTrainers] = useState<Trainer[]>([])
+  const [assignments, setAssignments] = useState<Assignment[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'trainers'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'trainers' | 'assignments'>('overview')
   const [dataLoading, setDataLoading] = useState(true)
-  const [supabase, setSupabase] = useState<any>(null)
-
-  useEffect(() => {
-    // Load supabase dynamically
-    const loadSupabase = async () => {
-      try {
-        const { supabase } = await import('@/lib/supabase')
-        setSupabase(supabase)
-      } catch (error) {
-        console.error('Error loading Supabase:', error)
-      }
-    }
-    loadSupabase()
-  }, [])
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [selectedTrainer, setSelectedTrainer] = useState<string>('')
+  const [assignmentNotes, setAssignmentNotes] = useState('')
+  const [assignmentLoading, setAssignmentLoading] = useState(false)
 
   useEffect(() => {
     // Check for admin session in localStorage
@@ -141,10 +133,10 @@ export default function AdminDashboardPage() {
   }, [router])
 
   useEffect(() => {
-    if (adminUser?.email === 'icanbefitter@gmail.com' && supabase) {
+    if (adminUser?.email === 'icanbefitter@gmail.com') {
       fetchAllData()
     }
-  }, [adminUser, supabase])
+  }, [adminUser])
 
   useEffect(() => {
     // Filter data based on search term
@@ -155,9 +147,8 @@ export default function AdminDashboardPage() {
         member.username.toLowerCase().includes(searchTerm.toLowerCase())
       )
       const filteredT = trainers.filter(trainer => 
-        trainer.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trainer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        trainer.username.toLowerCase().includes(searchTerm.toLowerCase())
+        (trainer.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
+        trainer.email.toLowerCase().includes(searchTerm.toLowerCase())
       )
       setFilteredMembers(filteredM)
       setFilteredTrainers(filteredT)
@@ -168,15 +159,10 @@ export default function AdminDashboardPage() {
   }, [searchTerm, members, trainers])
 
   const fetchAllData = async () => {
-    if (!supabase) {
-      console.log('Supabase not loaded yet')
-      return
-    }
-
     setDataLoading(true)
     try {
-      // Fetch members
-      const { data: membersData, error: membersError } = await supabase
+      // Fetch members using service client to bypass RLS
+      const { data: membersData, error: membersError } = await supabaseService
         .from('members')
         .select('*')
         .order('created_at', { ascending: false })
@@ -185,15 +171,17 @@ export default function AdminDashboardPage() {
         console.error('Error fetching members:', membersError)
         toast.error('Failed to fetch members data')
       } else {
+        console.log('Fetched members:', membersData)
         setMembers(membersData || [])
         setFilteredMembers(membersData || [])
       }
 
-      // Fetch trainers
-      const { data: trainersData, error: trainersError } = await supabase
-        .from('trainers')
+      // Fetch trainers using service client to bypass RLS
+      const { data: trainersData, error: trainersError } = await supabaseService
+        .from('trainer_accounts')
         .select('*')
         .order('created_at', { ascending: false })
+        .filter('is_active', 'eq', true)
 
       if (trainersError) {
         console.error('Error fetching trainers:', trainersError)
@@ -202,11 +190,93 @@ export default function AdminDashboardPage() {
         setTrainers(trainersData || [])
         setFilteredTrainers(trainersData || [])
       }
+
+      // Fetch assignments
+      await fetchAssignments()
     } catch (error) {
       console.error('Error fetching data:', error)
       toast.error('Failed to fetch data')
     } finally {
       setDataLoading(false)
+    }
+  }
+
+  const fetchAssignments = async () => {
+    try {
+      const response = await fetch('/api/trainer-member-assignments')
+      const data = await response.json()
+      
+      if (response.ok) {
+        setAssignments(data.assignments || [])
+      } else {
+        console.error('Error fetching assignments:', data.error)
+      }
+    } catch (error) {
+      console.error('Error fetching assignments:', error)
+    }
+  }
+
+  const handleAssignTrainer = async () => {
+    if (!selectedMember || !selectedTrainer) {
+      toast.error('Please select both member and trainer')
+      return
+    }
+
+    setAssignmentLoading(true)
+    try {
+      const response = await fetch('/api/trainer-member-assignments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          trainer_id: selectedTrainer,
+          member_id: selectedMember.id,
+          notes: assignmentNotes
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success(data.message)
+        setAssignDialogOpen(false)
+        setSelectedMember(null)
+        setSelectedTrainer('')
+        setAssignmentNotes('')
+        await fetchAssignments()
+      } else {
+        toast.error(data.error || 'Failed to assign trainer')
+      }
+    } catch (error) {
+      console.error('Error assigning trainer:', error)
+      toast.error('Failed to assign trainer')
+    } finally {
+      setAssignmentLoading(false)
+    }
+  }
+
+  const getMemberAssignment = (memberId: string) => {
+    return assignments.find(a => a.member_id === memberId && a.is_active)
+  }
+
+  const handleRemoveAssignment = async (assignmentId: string) => {
+    try {
+      const response = await fetch(`/api/trainer-member-assignments?assignment_id=${assignmentId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success(data.message)
+        await fetchAssignments()
+      } else {
+        toast.error(data.error || 'Failed to remove assignment')
+      }
+    } catch (error) {
+      console.error('Error removing assignment:', error)
+      toast.error('Failed to remove assignment')
     }
   }
 
@@ -221,19 +291,16 @@ export default function AdminDashboardPage() {
     const totalMembers = members.length
     const totalTrainers = trainers.length
     const activeMembers = members.filter(m => m.total_workouts > 0).length
-    const verifiedTrainers = trainers.filter(t => t.is_verified).length
-    const totalRevenue = trainers.reduce((sum, t) => sum + (t.hourly_rate * t.total_sessions), 0)
-    const avgRating = trainers.length > 0 
-      ? (trainers.reduce((sum, t) => sum + t.rating, 0) / trainers.length).toFixed(1)
-      : '0.0'
-
+    const activeTrainers = trainers.filter(t => t.is_active).length
+    
+    // Simplified stats since we don't have all the trainer details
     return {
       totalMembers,
       totalTrainers,
       activeMembers,
-      verifiedTrainers,
-      totalRevenue,
-      avgRating
+      activeTrainers,
+      totalRevenue: 0, // Not available in current data
+      avgRating: 'N/A' // Not available in current data
     }
   }
 
@@ -333,6 +400,16 @@ export default function AdminDashboardPage() {
               }`}
             >
               Trainers ({stats.totalTrainers})
+            </button>
+            <button
+              onClick={() => setActiveTab('assignments')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'assignments' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Assignments ({assignments.filter(a => a.is_active).length})
             </button>
           </div>
 
@@ -475,7 +552,7 @@ export default function AdminDashboardPage() {
                             <p className="font-medium">{trainer.full_name}</p>
                             <p className="text-sm text-gray-600">{trainer.email}</p>
                             <p className="text-xs text-gray-500">
-                              Rating: {trainer.rating} ⭐ | ${trainer.hourly_rate}/hr
+                              Status: {trainer.is_active ? 'Active' : 'Inactive'}
                             </p>
                           </div>
                         </div>
@@ -516,6 +593,7 @@ export default function AdminDashboardPage() {
                         <th className="text-left p-3">Workouts</th>
                         <th className="text-left p-3">Streak</th>
                         <th className="text-left p-3">Joined</th>
+                        <th className="text-left p-3">Trainer</th>
                         <th className="text-left p-3">Actions</th>
                       </tr>
                     </thead>
@@ -525,8 +603,7 @@ export default function AdminDashboardPage() {
                           <td className="p-3">
                             <div>
                               <p className="font-medium">{member.full_name || member.username}</p>
-                              <p className="text-sm text-gray-500">@{member.username}</p>
-                            </div>
+                              </div>
                           </td>
                           <td className="p-3">
                             <div className="flex items-center space-x-1">
@@ -567,6 +644,29 @@ export default function AdminDashboardPage() {
                             </span>
                           </td>
                           <td className="p-3">
+                            {(() => {
+                              const assignment = getMemberAssignment(member.id)
+                              return assignment ? (
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm font-medium text-green-600">
+                                    {assignment.trainer?.full_name}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleRemoveAssignment(assignment.id)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <span className="text-sm text-gray-500">No trainer assigned</span>
+                              )
+                            })()
+                            }
+                          </td>
+                          <td className="p-3">
                             <div className="flex space-x-1">
                               <Button size="sm" variant="outline">
                                 <Eye className="w-4 h-4" />
@@ -574,6 +674,76 @@ export default function AdminDashboardPage() {
                               <Button size="sm" variant="outline">
                                 <Edit className="w-4 h-4" />
                               </Button>
+                              <Dialog open={assignDialogOpen && selectedMember?.id === member.id} onOpenChange={(open) => {
+                                setAssignDialogOpen(open)
+                                if (!open) {
+                                  setSelectedMember(null)
+                                  setSelectedTrainer('')
+                                  setAssignmentNotes('')
+                                }
+                              }}>
+                                <DialogTrigger asChild>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedMember(member)
+                                      setAssignDialogOpen(true)
+                                    }}
+                                    disabled={!!getMemberAssignment(member.id)}
+                                  >
+                                    <UserPlus className="w-4 h-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                  <DialogHeader>
+                                    <DialogTitle>Assign Trainer</DialogTitle>
+                                    <DialogDescription>
+                                      Assign a trainer to {member.full_name || member.username}
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <label className="text-sm font-medium">Select Trainer</label>
+                                      <Select value={selectedTrainer} onValueChange={setSelectedTrainer}>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Choose a trainer" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {trainers.map((trainer) => (
+                                            <SelectItem key={trainer.id} value={trainer.id}>
+                                              {trainer.full_name} ({trainer.email})
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-medium">Notes (Optional)</label>
+                                      <Textarea
+                                        placeholder="Add any notes about this assignment..."
+                                        value={assignmentNotes}
+                                        onChange={(e) => setAssignmentNotes(e.target.value)}
+                                      />
+                                    </div>
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        onClick={handleAssignTrainer}
+                                        disabled={assignmentLoading || !selectedTrainer}
+                                        className="flex-1"
+                                      >
+                                        {assignmentLoading ? 'Assigning...' : 'Assign Trainer'}
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setAssignDialogOpen(false)}
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
                             </div>
                           </td>
                         </tr>
@@ -604,10 +774,6 @@ export default function AdminDashboardPage() {
                       <tr className="border-b">
                         <th className="text-left p-3">Name</th>
                         <th className="text-left p-3">Email</th>
-                        <th className="text-left p-3">Specialization</th>
-                        <th className="text-left p-3">Rating</th>
-                        <th className="text-left p-3">Rate</th>
-                        <th className="text-left p-3">Clients</th>
                         <th className="text-left p-3">Status</th>
                         <th className="text-left p-3">Joined</th>
                         <th className="text-left p-3">Actions</th>
@@ -619,7 +785,6 @@ export default function AdminDashboardPage() {
                           <td className="p-3">
                             <div>
                               <p className="font-medium">{trainer.full_name}</p>
-                              <p className="text-sm text-gray-500">@{trainer.username}</p>
                             </div>
                           </td>
                           <td className="p-3">
@@ -629,46 +794,11 @@ export default function AdminDashboardPage() {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="flex flex-wrap gap-1">
-                              {trainer.specialization.slice(0, 2).map((spec, index) => (
-                                <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                                  {spec}
-                                </span>
-                              ))}
-                              {trainer.specialization.length > 2 && (
-                                <span className="text-xs text-gray-500">+{trainer.specialization.length - 2} more</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                              <span>{trainer.rating}</span>
-                              <span className="text-sm text-gray-500">({trainer.total_reviews})</span>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <span className="font-medium">${trainer.hourly_rate}/hr</span>
-                          </td>
-                          <td className="p-3">
-                            <div>
-                              <p className="font-medium">{trainer.active_clients}</p>
-                              <p className="text-sm text-gray-500">Total: {trainer.total_clients}</p>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div className="flex flex-col space-y-1">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                trainer.is_verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {trainer.is_verified ? 'Verified' : 'Pending'}
-                              </span>
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                trainer.is_available ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
-                              }`}>
-                                {trainer.is_available ? 'Available' : 'Busy'}
-                              </span>
-                            </div>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              trainer.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {trainer.is_active ? 'Active' : 'Inactive'}
+                            </span>
                           </td>
                           <td className="p-3">
                             <span className="text-sm text-gray-600">
@@ -689,6 +819,89 @@ export default function AdminDashboardPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Assignments Tab */}
+          {activeTab === 'assignments' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <UserPlus className="w-5 h-5 text-purple-600" />
+                  <span>Trainer-Member Assignments ({assignments.filter(a => a.is_active).length})</span>
+                </CardTitle>
+                <CardDescription>
+                  Active trainer-member assignments
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-3">Member</th>
+                        <th className="text-left p-3">Trainer</th>
+                        <th className="text-left p-3">Assigned Date</th>
+                        <th className="text-left p-3">Status</th>
+                        <th className="text-left p-3">Notes</th>
+                        <th className="text-left p-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {assignments.filter(a => a.is_active).map((assignment) => (
+                        <tr key={assignment.id} className="border-b hover:bg-gray-50">
+                          <td className="p-3">
+                            <div>
+                              <p className="font-medium">{assignment.member?.full_name || assignment.member?.username}</p>
+                              <p className="text-sm text-gray-500">{assignment.member?.email}</p>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <div>
+                              <p className="font-medium">{assignment.trainer?.full_name}</p>
+                              <p className="text-sm text-gray-500">{assignment.trainer?.email}</p>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="text-sm text-gray-600">
+                              {new Date(assignment.assigned_date).toLocaleDateString()}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              assignment.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {assignment.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className="text-sm text-gray-600">
+                              {assignment.notes || 'No notes'}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex space-x-1">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleRemoveAssignment(assignment.id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {assignments.filter(a => a.is_active).length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No active assignments found
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

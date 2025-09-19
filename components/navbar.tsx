@@ -86,9 +86,9 @@ export default function Navbar() {
           <Link href="/work-with-us" className="text-black hover:text-slate-700 font-semibold transition-colors text-sm">
             Work with Us
           </Link>
-          <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors text-sm">
+          <Link href="/store" className="text-black hover:text-slate-700 font-semibold transition-colors text-sm">
             Store
-          </a>
+          </Link>
           <a href="#" className="text-black hover:text-slate-700 font-semibold transition-colors text-sm">
             Contact
           </a>
@@ -194,9 +194,9 @@ export default function Navbar() {
                 <Link href="/work-with-us" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                   Work with Us
                 </Link>
-                <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                <Link href="/store" onClick={() => setIsMobileMenuOpen(false)} className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                   Store
-                </a>
+                </Link>
                 <a href="#" className="block text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors">
                   Contact
                 </a>
